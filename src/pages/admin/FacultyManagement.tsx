@@ -37,9 +37,41 @@ const FacultyManagement = () => {
   const navigate = useNavigate();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newFaculty, setNewFaculty] = useState({ name: "", email: "", department: "", password: "" });
-  
   // Faculty data from DB
   const [faculties, setFaculties] = useState<Faculty[]>([]);
+  // New state for advisor assignment
+  const [classList, setClassList] = useState<any[]>([]);
+  const [selectedClassId, setSelectedClassId] = useState<string>("");
+  const [selectedFacultyId, setSelectedFacultyId] = useState<string>("");
+
+  // Fetch all classes for dropdown
+  useEffect(() => {
+    const fetchClasses = async () => {
+      const { data } = await supabase
+        .from('classes')
+        .select('id, class_name, department, section, year');
+      setClassList(data || []);
+    };
+    fetchClasses();
+  }, []);
+
+  // Assign advisor handler
+  const handleAssignAdvisor = async () => {
+    if (!selectedClassId || !selectedFacultyId) return;
+    // Update faculty table: set advisor_class_id and is_class_advisor
+    const { error } = await supabase
+      .from('faculty')
+      .update({ advisor_class_id: selectedClassId, is_class_advisor: true })
+      .eq('id', selectedFacultyId);
+    if (error) {
+      toast.error('Error assigning advisor: ' + error.message);
+      return;
+    }
+    toast.success('Advisor assigned successfully!');
+    // Optionally refresh faculty list
+    setSelectedClassId("");
+    setSelectedFacultyId("");
+  };
 
   useEffect(() => {
     const fetchFaculties = async () => {
@@ -155,6 +187,42 @@ const FacultyManagement = () => {
             </DialogContent>
           </Dialog>
         </div>
+
+        {/* Assign Class Advisor Section */}
+        <Card className="shadow-medium mb-8">
+          <div className="p-6 space-y-4">
+            <h2 className="text-xl font-bold">Assign Class Advisor</h2>
+            <div className="grid grid-cols-2 gap-4 max-w-xl">
+              <div className="space-y-2">
+                <Label>Select Class</Label>
+                <Select onValueChange={setSelectedClassId} value={selectedClassId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose class" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {classList.map(cls => (
+                      <SelectItem key={cls.id} value={cls.id}>{cls.class_name} - {cls.year} Year {cls.department} {cls.section}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Select Faculty</Label>
+                <Select onValueChange={setSelectedFacultyId} value={selectedFacultyId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose faculty" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {faculties.map(f => (
+                      <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <Button onClick={handleAssignAdvisor} disabled={!selectedClassId || !selectedFacultyId} className="mt-4">Assign Advisor</Button>
+          </div>
+        </Card>
 
         <Tabs defaultValue="all-faculty" className="space-y-4">
           <TabsList className="grid w-full max-w-2xl grid-cols-3">

@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Download, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -14,24 +15,74 @@ import CircularProgress from "@/components/CircularProgress";
 
 const StudentManagement = () => {
   const navigate = useNavigate();
-  const [selectedYear, setSelectedYear] = useState("");
   const [selectedClass, setSelectedClass] = useState("");
+  const [classList, setClassList] = useState<any[]>([]);
 
-  // Mock data
-  const students = [
-    { rollNo: "21CS001", name: "John Doe", attendance: 85.5 },
-    { rollNo: "21CS002", name: "Jane Smith", attendance: 92.0 },
-    { rollNo: "21CS003", name: "Mike Johnson", attendance: 78.5 },
-    { rollNo: "21CS004", name: "Sarah Williams", attendance: 88.0 },
-    { rollNo: "21CS005", name: "David Brown", attendance: 95.5 },
-  ];
+  // Real data from DB
+  const [students, setStudents] = useState<any[]>([]);
+  const [classInfo, setClassInfo] = useState<any>({ name: '', advisor: '', overallAttendance: 0, totalStudents: 0 });
 
-  const classInfo = {
-    name: "3rd Year - CSE A",
-    advisor: "Dr. Sarah Johnson",
-    overallAttendance: 87.9,
-    totalStudents: 60
-  };
+  // Fetch all classes for dropdown
+  useEffect(() => {
+    const fetchClasses = async () => {
+      const { data } = await supabase
+        .from('classes')
+        .select('id, class_name, year, section, department');
+      setClassList(data || []);
+    };
+    fetchClasses();
+  }, []);
+
+  // Fetch students and attendance from DB when class changes
+  useEffect(() => {
+    if (!selectedClass) return;
+    const fetchData = async () => {
+      // Fetch class by id
+      const classData = classList.find(cls => cls.id === selectedClass);
+      if (!classData) return;
+      // Fetch advisor name from faculty table where advisor_class_id matches class id
+      let advisorName = '';
+      const { data: advisorData } = await supabase
+        .from('faculty')
+        .select('full_name')
+        .eq('advisor_class_id', classData.id)
+        .eq('is_class_advisor', true)
+        .maybeSingle();
+      advisorName = advisorData?.full_name || '';
+      // Fetch students in class
+      const { data: studentData } = await supabase
+        .from('students')
+        .select('id, roll_number, full_name')
+        .eq('class_id', classData.id);
+      // For each student, fetch attendance percentage
+      const studentsWithAttendance = await Promise.all((studentData || []).map(async (student: any) => {
+        const { data: attendanceRecords } = await supabase
+          .from('attendance_records')
+          .select('status')
+          .eq('student_id', student.id);
+        const total = attendanceRecords?.length || 0;
+        const present = attendanceRecords?.filter((r: any) => r.status === 'present').length || 0;
+        const attendance = total ? Math.round((present / total) * 1000) / 10 : 0;
+        return {
+          rollNo: student.roll_number,
+          name: student.full_name,
+          attendance
+        };
+      }));
+      // Calculate class average
+      const overallAttendance = studentsWithAttendance.length
+        ? Math.round((studentsWithAttendance.reduce((sum, s) => sum + s.attendance, 0) / studentsWithAttendance.length) * 10) / 10
+        : 0;
+      setClassInfo({
+        name: `${classData.year} Year - ${classData.class_name}`,
+        advisor: advisorName,
+        overallAttendance,
+        totalStudents: studentsWithAttendance.length
+      });
+      setStudents(studentsWithAttendance);
+    };
+    fetchData();
+  }, [selectedClass, classList]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
@@ -51,33 +102,17 @@ const StudentManagement = () => {
         <Card className="shadow-medium">
           <div className="p-6 space-y-4">
             <h2 className="text-xl font-bold">Select Class</h2>
-            <div className="grid md:grid-cols-2 gap-4 max-w-2xl">
-              <div className="space-y-2">
-                <Select onValueChange={setSelectedYear}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Year" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">1st Year</SelectItem>
-                    <SelectItem value="2">2nd Year</SelectItem>
-                    <SelectItem value="3">3rd Year</SelectItem>
-                    <SelectItem value="4">4th Year</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Select onValueChange={setSelectedClass}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Class" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="cse-a">CSE - A</SelectItem>
-                    <SelectItem value="cse-b">CSE - B</SelectItem>
-                    <SelectItem value="ece-a">ECE - A</SelectItem>
-                    <SelectItem value="mech-a">MECH - A</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="space-y-2 max-w-xl">
+              <Select onValueChange={setSelectedClass} value={selectedClass}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Class" />
+                </SelectTrigger>
+                <SelectContent>
+                  {classList.map(cls => (
+                    <SelectItem key={cls.id} value={cls.id}>{cls.class_name} - {cls.year} Year {cls.department} {cls.section}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </Card>

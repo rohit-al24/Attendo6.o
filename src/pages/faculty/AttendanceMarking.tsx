@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,6 +18,7 @@ export interface Student {
 
 const AttendanceMarking = () => {
   const navigate = useNavigate();
+  const { userProfile } = useAuth();
   
   // Get classId and subject from router state (or set default)
   const location = useLocation();
@@ -76,9 +78,17 @@ const AttendanceMarking = () => {
     // Save attendance to DB
     const today = new Date().toISOString().slice(0, 10);
     const now = new Date().toISOString();
-    // TODO: Replace with actual faculty_id from context/auth if available
-    const facultyId = null;
-    const markedBy = null;
+    // Use faculty_id from userProfile if available
+    const facultyId = userProfile?.id || null;
+  const markedBy = userProfile?.id || null;
+    console.log('userProfile:', userProfile);
+    console.log('facultyId (faculty.id):', facultyId);
+  console.log('markedBy (faculty.id):', markedBy);
+    if (!facultyId || !markedBy) {
+      console.error('Faculty ID or user_id missing in userProfile:', userProfile);
+      toast.error('Faculty ID or user_id not found. Please re-login.');
+      return;
+    }
     const records = students.map(s => ({
       student_id: s.id,
       status: s.status,
@@ -92,7 +102,7 @@ const AttendanceMarking = () => {
     }));
     const { error } = await supabase
       .from('attendance_records')
-      .upsert(records, { onConflict: 'student_id,date,period_number' });
+      .insert(records);
     if (error) {
       console.error('Attendance save error:', error);
       toast.error('Error saving attendance: ' + JSON.stringify(error));

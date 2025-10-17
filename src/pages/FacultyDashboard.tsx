@@ -32,21 +32,23 @@ const FacultyDashboard = () => {
         .eq("user_id", data.session.user.id)
         .single();
       if (faculty) {
-        // Get advisor class name if advisor_class_id exists
-        let advisorClass = "";
+        // Get advisor class name and id if advisor_class_id exists
+        let advisorClassName = "";
+        let advisorClassId = faculty.advisor_class_id || "";
         if (faculty.advisor_class_id) {
           const { data: classData } = await supabase
             .from("classes")
             .select("class_name")
             .eq("id", faculty.advisor_class_id)
             .single();
-          advisorClass = classData?.class_name || "";
+          advisorClassName = classData?.class_name || "";
         }
         setFacultyData({
           name: faculty.full_name,
           email: faculty.email,
           isClassAdvisor: faculty.is_class_advisor,
-          advisorClass,
+          advisorClass: advisorClassName,
+          advisorClassId,
           department: faculty.department
         });
       }
@@ -182,7 +184,12 @@ const FacultyDashboard = () => {
                     <Calendar className="w-6 h-6" />
                     <span>Manage Timetable</span>
                   </Button>
-                  <Button size="lg" className="h-24 flex flex-col gap-2" variant="secondary">
+                  <Button 
+                    size="lg" 
+                    className="h-24 flex flex-col gap-2" 
+                    variant="secondary"
+                    onClick={() => facultyData?.advisorClassId && navigate(`/faculty/advisor-attendance-report?classId=${encodeURIComponent(facultyData.advisorClassId)}`)}
+                  >
                     <ClipboardList className="w-6 h-6" />
                     <span>View Attendance Reports</span>
                   </Button>

@@ -62,22 +62,32 @@ const StudentDashboard = () => {
         if (facultyData) facultyData.forEach((f: any) => { facultyMap[f.id] = f.full_name; });
       }
 
-      // Subject-wise attendance grouped by subject, counting unique faculty
-      const subjectsMap: Record<string, { present: number; total: number; facultyIds: Set<string>; subject: string }> = {};
+      // Group attendance records by subject, period, and faculty
+      const grouped: Record<string, any[]> = {};
       data.forEach((r: any) => {
-        if (!subjectsMap[r.subject]) subjectsMap[r.subject] = { present: 0, total: 0, facultyIds: new Set(), subject: r.subject };
-        subjectsMap[r.subject].total++;
-        if (r.status === 'present') subjectsMap[r.subject].present++;
-        if (r.faculty_id) subjectsMap[r.subject].facultyIds.add(r.faculty_id);
+        const key = `${r.subject}|${r.period_number}|${r.faculty_id}`;
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push(r);
       });
-      setSubjects(Object.values(subjectsMap).map(stats => ({
-        name: stats.subject,
-        attendance: stats.total ? Math.round((stats.present / stats.total) * 1000) / 10 : 0,
-        present: stats.present,
-        total: stats.total,
-        facultyNames: Array.from(stats.facultyIds).map(fid => facultyMap[fid] || 'Unknown'),
-        facultyCount: stats.facultyIds.size
-      })));
+      // Prepare rows for table
+      const rows = Object.entries(grouped).map(([key, records]) => {
+        const [subject, period, facultyId] = key.split('|');
+        const present = records.filter((r: any) => r.status === 'present').length;
+        const absent = records.filter((r: any) => r.status === 'absent').length;
+        const onduty = records.filter((r: any) => r.status === 'onduty').length;
+        const total = records.length;
+        return {
+          facultyName: facultyMap[facultyId] || 'Unknown',
+          subject,
+          period,
+          present,
+          absent,
+          onduty,
+          total,
+          percentage: total ? ((present / total) * 100).toFixed(2) + '%' : '0%'
+        };
+      });
+      setSubjects(rows);
     };
     fetchAttendance();
   }, [student, navigate]);
@@ -145,36 +155,41 @@ const StudentDashboard = () => {
           </div>
         </Card>
 
-        {/* Subject-wise Attendance */}
+        {/* Detailed Attendance Records Table */}
         <Card className="shadow-medium">
           <div className="p-6 space-y-4">
             <h2 className="text-2xl font-bold flex items-center gap-2">
               <Book className="w-6 h-6 text-primary" />
-              Subject-wise Attendance
+              Detailed Attendance Records
             </h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {subjects.map((subject, index) => (
-                <Card key={index} className="border-2 hover:border-primary transition-smooth">
-                  <div className="p-6 space-y-4">
-                    <h3 className="font-semibold text-lg">{subject.name}</h3>
-                    <div className="flex justify-center">
-                      <CircularProgress 
-                        percentage={subject.attendance}
-                        size={120}
-                      />
-                    </div>
-                    <div className="text-center text-sm text-muted-foreground">
-                      <p>Present: {subject.present} / {subject.total}</p>
-                      {subject.facultyCount > 0 && (
-                        <p>
-                          Attendance marked by: {subject.facultyNames.join(', ')} ({subject.facultyCount})
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
+            <table className="w-full text-center border">
+              <thead>
+                <tr>
+                  <th>Faculty Name</th>
+                  <th>Subject</th>
+                  <th>Period</th>
+                  <th>Present</th>
+                  <th>Absent</th>
+                  <th>On Duty</th>
+                  <th>Total</th>
+                  <th>Percentage</th>
+                </tr>
+              </thead>
+              <tbody>
+                {subjects.map((row, idx) => (
+                  <tr key={idx}>
+                    <td>{row.facultyName}</td>
+                    <td>{row.subject}</td>
+                    <td>{row.period}</td>
+                    <td>{row.present}</td>
+                    <td>{row.absent}</td>
+                    <td>{row.onduty}</td>
+                    <td>{row.total}</td>
+                    <td>{row.percentage}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </Card>
       </main>
