@@ -1,35 +1,19 @@
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Book, ArrowLeft } from "lucide-react";
-import { useLocation, useNavigate } from "react-router-dom";
-import CircularProgress from "@/components/CircularProgress";
+
+import { useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import CircularProgress from "@/components/CircularProgress";
+import { Card } from "@/components/ui/card";
+import { Book } from "lucide-react";
 
 const StudentAttendance = () => {
   const location = useLocation();
-  const navigate = useNavigate();
   const student = location.state?.student;
   const [attendance, setAttendance] = useState<number>(0);
   const [subjects, setSubjects] = useState<any[]>([]);
-  const [classInfo, setClassInfo] = useState<any>(null);
 
   useEffect(() => {
-    if (!student) {
-      navigate('/student-login');
-      return;
-    }
-    // Fetch class info
-    const fetchClass = async () => {
-      const { data } = await supabase
-        .from('classes')
-        .select('class_name, department')
-        .eq('id', student.class_id)
-        .single();
-      setClassInfo(data);
-    };
-    fetchClass();
-
+    if (!student) return;
     // Fetch attendance records for student
     const fetchAttendance = async () => {
       const { data } = await supabase
@@ -81,48 +65,13 @@ const StudentAttendance = () => {
       setSubjects(rows);
     };
     fetchAttendance();
-  }, [student, navigate]);
+  }, [student]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
-      <header className="border-b bg-card shadow-soft">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <h1 className="text-xl font-bold flex items-center gap-2">
-              <Book className="w-6 h-6 text-primary" /> Attendance Details
-            </h1>
-          </div>
-        </div>
-      </header>
       <main className="container mx-auto px-4 py-8 space-y-6">
-        {/* Student Info Card */}
-        <Card className="shadow-medium">
-          <div className="p-6 space-y-4">
-            <h2 className="text-2xl font-bold flex items-center gap-2">
-              <Book className="w-6 h-6 text-primary" />
-              Student Information
-            </h2>
-            <div className="grid md:grid-cols-3 gap-4">
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Name</p>
-                <p className="text-lg font-semibold">{student?.full_name}</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Roll Number</p>
-                <p className="text-lg font-semibold">{student?.roll_number}</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Department</p>
-                <p className="text-lg font-semibold">{classInfo?.department || '-'}</p>
-              </div>
-            </div>
-          </div>
-        </Card>
         {/* Overall Attendance */}
-        <Card className="shadow-medium mb-6">
+        <Card className="shadow-medium">
           <div className="p-6 text-center space-y-4">
             <h2 className="text-2xl font-bold">Overall Attendance</h2>
             <div className="flex justify-center py-4">
@@ -134,64 +83,44 @@ const StudentAttendance = () => {
             </div>
           </div>
         </Card>
-        {/* Subject-wise Attendance Grid */}
-        <div className="space-y-4">
-          <h2 className="text-2xl font-bold flex items-center gap-2">
-            <Book className="w-6 h-6 text-primary" />
-            Subject-wise Attendance
-          </h2>
-          <div className="grid grid-cols-2 gap-6">
-            {subjects.map((row, idx) => {
-              // Color palette for cards
-              const colors = [
-                "from-blue-500 to-blue-700",
-                "from-green-500 to-green-700",
-                "from-yellow-400 to-yellow-600",
-                "from-pink-500 to-pink-700",
-                "from-purple-500 to-purple-700",
-                "from-gray-500 to-gray-700"
-              ];
-              const color = colors[idx % colors.length];
-              return (
-                <Card key={idx} className={`shadow-lg bg-gradient-to-br ${color} text-white flex flex-col items-center p-6`}>
-                  <div className="flex items-center gap-3 mb-2 w-full justify-between">
-                    <div className="flex flex-col">
-                      <span className="font-bold text-lg">{row.subject}</span>
-                      <span className="text-sm opacity-80">Period: {row.period}</span>
-                    </div>
-                    <div className="flex flex-col items-end">
-                      <span className="font-semibold">{row.facultyName}</span>
-                      <span className="text-xs opacity-80">Faculty</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-center w-full mb-4">
-                    <CircularProgress
-                      percentage={Math.floor(parseFloat(row.percentage))}
-                      size={120}
-                      strokeWidth={12}
-                    />
-                  </div>
-                  <div className="grid grid-cols-3 gap-2 w-full text-center">
-                    <div>
-                      <span className="block text-xs">Present</span>
-                      <span className="block text-lg font-bold">{row.present}</span>
-                    </div>
-                    <div>
-                      <span className="block text-xs">Absent</span>
-                      <span className="block text-lg font-bold">{row.absent}</span>
-                    </div>
-                    <div>
-                      <span className="block text-xs">On Duty</span>
-                      <span className="block text-lg font-bold">{row.onduty}</span>
-                    </div>
-                  </div>
-                  <div className="mt-2 text-xs opacity-80">Total: {row.total}</div>
-                  <div className="mt-1 text-xs font-semibold">Attendance: {row.percentage}</div>
-                </Card>
-              );
-            })}
+
+        {/* Detailed Attendance Records Table */}
+        <Card className="shadow-medium">
+          <div className="p-6 space-y-4">
+            <h2 className="text-2xl font-bold flex items-center gap-2">
+              <Book className="w-6 h-6 text-primary" />
+              Detailed Attendance Records
+            </h2>
+            <table className="w-full text-center border">
+              <thead>
+                <tr>
+                  <th>Faculty Name</th>
+                  <th>Subject</th>
+                  <th>Period</th>
+                  <th>Present</th>
+                  <th>Absent</th>
+                  <th>On Duty</th>
+                  <th>Total</th>
+                  <th>Percentage</th>
+                </tr>
+              </thead>
+              <tbody>
+                {subjects.map((row, idx) => (
+                  <tr key={idx}>
+                    <td>{row.facultyName}</td>
+                    <td>{row.subject}</td>
+                    <td>{row.period}</td>
+                    <td>{row.present}</td>
+                    <td>{row.absent}</td>
+                    <td>{row.onduty}</td>
+                    <td>{row.total}</td>
+                    <td>{row.percentage}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        </div>
+        </Card>
       </main>
     </div>
   );
