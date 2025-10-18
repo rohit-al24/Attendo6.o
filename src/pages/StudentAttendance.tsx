@@ -134,43 +134,64 @@ const StudentAttendance = () => {
             </div>
           </div>
         </Card>
-        {/* Detailed Attendance Records Table */}
-        <Card className="shadow-medium">
-          <div className="p-6 space-y-4">
-            <h2 className="text-2xl font-bold flex items-center gap-2">
-              <Book className="w-6 h-6 text-primary" />
-              Detailed Attendance Records
-            </h2>
-            <table className="w-full text-center border">
-              <thead>
-                <tr>
-                  <th>Faculty Name</th>
-                  <th>Subject</th>
-                  <th>Period</th>
-                  <th>Present</th>
-                  <th>Absent</th>
-                  <th>On Duty</th>
-                  <th>Total</th>
-                  <th>Percentage</th>
-                </tr>
-              </thead>
-              <tbody>
-                {subjects.map((row, idx) => (
-                  <tr key={idx}>
-                    <td>{row.facultyName}</td>
-                    <td>{row.subject}</td>
-                    <td>{row.period}</td>
-                    <td>{row.present}</td>
-                    <td>{row.absent}</td>
-                    <td>{row.onduty}</td>
-                    <td>{row.total}</td>
-                    <td>{row.percentage}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {/* Subject-wise Attendance Grid */}
+        <div className="space-y-4">
+          <h2 className="text-2xl font-bold flex items-center gap-2">
+            <Book className="w-6 h-6 text-primary" />
+            Subject-wise Attendance
+          </h2>
+          <div className="grid grid-cols-2 gap-6">
+            {subjects.map((row, idx) => {
+              // Color palette for cards
+              const colors = [
+                "from-blue-500 to-blue-700",
+                "from-green-500 to-green-700",
+                "from-yellow-400 to-yellow-600",
+                "from-pink-500 to-pink-700",
+                "from-purple-500 to-purple-700",
+                "from-gray-500 to-gray-700"
+              ];
+              const color = colors[idx % colors.length];
+              return (
+                <Card key={idx} className={`shadow-lg bg-gradient-to-br ${color} text-white flex flex-col items-center p-6`}>
+                  <div className="flex items-center gap-3 mb-2 w-full justify-between">
+                    <div className="flex flex-col">
+                      <span className="font-bold text-lg">{row.subject}</span>
+                      <span className="text-sm opacity-80">Period: {row.period}</span>
+                    </div>
+                    <div className="flex flex-col items-end">
+                      <span className="font-semibold">{row.facultyName}</span>
+                      <span className="text-xs opacity-80">Faculty</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-center w-full mb-4">
+                    <CircularProgress
+                      percentage={Math.floor(parseFloat(row.percentage))}
+                      size={120}
+                      strokeWidth={12}
+                    />
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 w-full text-center">
+                    <div>
+                      <span className="block text-xs">Present</span>
+                      <span className="block text-lg font-bold">{row.present}</span>
+                    </div>
+                    <div>
+                      <span className="block text-xs">Absent</span>
+                      <span className="block text-lg font-bold">{row.absent}</span>
+                    </div>
+                    <div>
+                      <span className="block text-xs">On Duty</span>
+                      <span className="block text-lg font-bold">{row.onduty}</span>
+                    </div>
+                  </div>
+                  <div className="mt-2 text-xs opacity-80">Total: {row.total}</div>
+                  <div className="mt-1 text-xs font-semibold">Attendance: {row.percentage}</div>
+                </Card>
+              );
+            })}
           </div>
-        </Card>
+        </div>
       </main>
     </div>
   );

@@ -250,6 +250,7 @@ export type Database = {
           id: string
           roll_number: string
           user_id: string | null
+          profile_url?: string | null
         }
         Insert: {
           class_id?: string | null
@@ -258,6 +259,7 @@ export type Database = {
           id?: string
           roll_number: string
           user_id?: string | null
+          profile_url?: string | null
         }
         Update: {
           class_id?: string | null
@@ -266,6 +268,7 @@ export type Database = {
           id?: string
           roll_number?: string
           user_id?: string | null
+          profile_url?: string | null
         }
         Relationships: [
           {

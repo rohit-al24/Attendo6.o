@@ -155,3 +155,26 @@ All colors MUST be HSL.
     transition: var(--transition-bounce);
   }
 }
+
+/* Profile photo pop animation */
+@keyframes profilePop {
+  0% { transform: scale(0.8); opacity: 0.5; }
+  60% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.animate-profile-pop {
+  animation: profilePop 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* Name glow animation */
+@keyframes nameGlow {
+  0%, 100% { text-shadow: 0 0 8px #2563eb88, 0 0 2px #fff; }
+  50% { text-shadow: 0 0 16px #2563ebcc, 0 0 4px #fff; }
+}
+.animate-name-glow {
+  animation: nameGlow 2s infinite alternate;
+  color: #2563eb;
+  font-family: 'Segoe UI', 'Arial', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
