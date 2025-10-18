@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LogOut, User, Book, Megaphone, BarChart2, Vote } from "lucide-react";
+import { LogOut, User, Book, Megaphone, BarChart2, Vote, MessageSquare, UserCircle } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import CircularProgress from "@/components/CircularProgress";
 import { useEffect, useState } from "react";
@@ -13,7 +13,7 @@ const StudentDashboard = () => {
   const [attendance, setAttendance] = useState<number>(0);
   const [subjects, setSubjects] = useState<any[]>([]);
   const [classInfo, setClassInfo] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<'attendance' | 'result' | 'announcements' | 'voting'>('attendance');
+  const [activeTab, setActiveTab] = useState<'attendance' | 'result' | 'announcements' | 'voting' | 'feedback' | 'profile'>('attendance');
 
   // Handler for Attendance button to redirect to new page
   const handleAttendanceClick = () => {
@@ -122,15 +122,27 @@ const StudentDashboard = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 space-y-6">
-        {/* Student Info Card */}
-        <Card className="shadow-medium">
+      <main className="container mx-auto px-4 py-8 space-y-6 flex flex-col items-center">
+        {/* Profile Photo */}
+        <div className="flex flex-col items-center mb-4">
+          <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-primary shadow-lg bg-muted flex items-center justify-center">
+            {/* Replace src with actual student photo if available */}
+            <img
+              src={student?.profile_url || "https://ui-avatars.com/api/?name=" + encodeURIComponent(student?.full_name || "Student") + "&background=0D8ABC&color=fff"}
+              alt="Profile"
+              className="w-full h-full object-cover"
+            />
+          </div>
+        </div>
+
+        {/* Student Info Card (mobile friendly) */}
+        <Card className="shadow-medium w-full max-w-md mb-6">
           <div className="p-6 space-y-4">
             <h2 className="text-2xl font-bold flex items-center gap-2">
               <User className="w-6 h-6 text-primary" />
               Student Information
             </h2>
-            <div className="grid md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div className="space-y-1">
                 <p className="text-sm text-muted-foreground">Name</p>
                 <p className="text-lg font-semibold">{student?.full_name}</p>
@@ -147,8 +159,8 @@ const StudentDashboard = () => {
           </div>
         </Card>
 
-        {/* Dashboard Buttons - Grid, Large, Colored */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 justify-center mt-4">
+        {/* Dashboard Buttons - 3x2 Grid, Large, Colored */}
+        <div className="grid grid-cols-2 grid-rows-3 gap-6 w-full max-w-2xl justify-center">
           <Button
             className="h-32 text-xl font-bold flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-blue-500 to-blue-700 text-white shadow-lg hover:from-blue-600 hover:to-blue-800 transition-all duration-200"
             onClick={handleAttendanceClick}
@@ -177,10 +189,24 @@ const StudentDashboard = () => {
             <Vote className="w-10 h-10 mb-1" />
             Voting
           </Button>
+          <Button
+            className="h-32 text-xl font-bold flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-purple-500 to-purple-700 text-white shadow-lg hover:from-purple-600 hover:to-purple-800 transition-all duration-200"
+            onClick={() => setActiveTab('feedback')}
+          >
+            <MessageSquare className="w-10 h-10 mb-1" />
+            Feedback
+          </Button>
+          <Button
+            className="h-32 text-xl font-bold flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-gray-500 to-gray-700 text-white shadow-lg hover:from-gray-600 hover:to-gray-800 transition-all duration-200"
+            onClick={() => setActiveTab('profile')}
+          >
+            <UserCircle className="w-10 h-10 mb-1" />
+            Profile
+          </Button>
         </div>
 
         {/* Tab Content (except Attendance, which now redirects) */}
-        <div className="mt-8">
+        <div className="mt-8 w-full max-w-2xl">
           {activeTab === 'result' && (
             <Card className="shadow-medium p-8 text-center">
               <h2 className="text-2xl font-bold mb-2">Result</h2>
@@ -197,6 +223,18 @@ const StudentDashboard = () => {
             <Card className="shadow-medium p-8 text-center">
               <h2 className="text-2xl font-bold mb-2">Voting</h2>
               <p className="text-muted-foreground">Voting feature coming soon.</p>
+            </Card>
+          )}
+          {activeTab === 'feedback' && (
+            <Card className="shadow-medium p-8 text-center">
+              <h2 className="text-2xl font-bold mb-2">Feedback</h2>
+              <p className="text-muted-foreground">Feedback feature coming soon.</p>
+            </Card>
+          )}
+          {activeTab === 'profile' && (
+            <Card className="shadow-medium p-8 text-center">
+              <h2 className="text-2xl font-bold mb-2">Profile</h2>
+              <p className="text-muted-foreground">Profile feature coming soon.</p>
             </Card>
           )}
         </div>
