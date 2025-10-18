@@ -14,31 +14,34 @@ const StudentLogin = () => {
   const [rollNumber, setRollNumber] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+    setErrorMsg("");
     if (!rollNumber || !password) {
-      toast.error("Please fill in all fields");
+      setErrorMsg("Please fill in all fields");
       return;
     }
-
     setLoading(true);
-    
-    // Custom login using students table
-    const { data, error } = await (supabase as any)
-      .from('students')
-      .select('id, full_name, email, class_id, roll_number')
-      .eq('roll_number', rollNumber)
-      .eq('password', password)
-      .single();
-    if (error || !data) {
-      toast.error('Invalid credentials');
-      setLoading(false);
-      return;
+    try {
+      // Custom login using students table
+      const { data, error } = await supabase
+        .from('students')
+        .select('id, full_name, email, class_id, roll_number')
+        .eq('roll_number', rollNumber)
+        .eq('password', password)
+        .single();
+      if (error || !data) {
+        setErrorMsg("Invalid roll number or password");
+        setLoading(false);
+        return;
+      }
+      // Successful login, route to dashboard
+      navigate('/student-dashboard', { state: { student: data } });
+    } catch (err) {
+      setErrorMsg("Unexpected error. Please try again later.");
     }
-    // Successful login, route to dashboard
-    navigate('/student-dashboard', { state: { student: data } });
     setLoading(false);
   };
 
@@ -59,6 +62,13 @@ const StudentLogin = () => {
             </div>
           </div>
 
+          {/* Error Message */}
+          {errorMsg && (
+            <div className="text-center text-red-600 font-semibold animate-fade-in">
+              {errorMsg}
+            </div>
+          )}
+
           {/* Login Form */}
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
@@ -71,6 +81,7 @@ const StudentLogin = () => {
                 onChange={(e) => setRollNumber(e.target.value.toUpperCase())}
                 style={{ textTransform: 'uppercase' }}
                 required
+                autoFocus
               />
             </div>
 
