@@ -174,7 +174,7 @@ const FacultyDashboard = () => {
               <div className="p-6 space-y-4">
                 <h2 className="text-2xl font-bold">Class Advisor Dashboard</h2>
                 <p className="text-muted-foreground">Managing: {facultyData?.advisorClass || ""}</p>
-                <div className="grid md:grid-cols-4 gap-4 pt-4">
+                <div className="grid md:grid-cols-5 gap-4 pt-4">
                   <Button 
                     size="lg" 
                     className="h-24 flex flex-col gap-2"
@@ -209,6 +209,15 @@ const FacultyDashboard = () => {
                   >
                     <BookOpen className="w-6 h-6" />
                     <span>Results</span>
+                  </Button>
+                  <Button 
+                    size="lg" 
+                    className="h-24 flex flex-col gap-2" 
+                    variant="outline"
+                    onClick={() => navigate('/faculty/exam-marks')}
+                  >
+                    <BookOpen className="w-6 h-6" />
+                    <span>Exam Marks</span>
                   </Button>
                 </div>
               </div>
