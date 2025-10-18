@@ -1,34 +1,19 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LogOut, User, Book, Megaphone, BarChart2, Vote } from "lucide-react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { Book, ArrowLeft } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
 import CircularProgress from "@/components/CircularProgress";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-const StudentDashboard = () => {
-  const navigate = useNavigate();
+const StudentAttendance = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const student = location.state?.student;
   const [attendance, setAttendance] = useState<number>(0);
   const [subjects, setSubjects] = useState<any[]>([]);
   const [classInfo, setClassInfo] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<'attendance' | 'result' | 'announcements' | 'voting'>('attendance');
 
-  // Handler for Attendance button to redirect to new page
-  const handleAttendanceClick = () => {
-    navigate('/student-attendance', { state: { student } });
-  };
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) {
-        navigate("/student-login");
-      }
-    });
-  }, [navigate]);
-
-  // Mock student data - In real app, this would come from backend
   useEffect(() => {
     if (!student) {
       navigate('/student-login');
@@ -49,7 +34,7 @@ const StudentDashboard = () => {
     const fetchAttendance = async () => {
       const { data } = await supabase
         .from('attendance_records')
-        .select('subject, status, faculty_id')
+        .select('subject, status, faculty_id, period_number')
         .eq('student_id', student.id);
       if (!data) return;
       // Calculate overall attendance
@@ -100,34 +85,24 @@ const StudentDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
-      {/* Header */}
       <header className="border-b bg-card shadow-soft">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 gradient-primary rounded-lg flex items-center justify-center">
-              <User className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold">Student Portal</h1>
-              <p className="text-sm text-muted-foreground">Welcome back, {student?.full_name}</p>
-            </div>
+            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <h1 className="text-xl font-bold flex items-center gap-2">
+              <Book className="w-6 h-6 text-primary" /> Attendance Details
+            </h1>
           </div>
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate("/login-selection")}
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            Logout
-          </Button>
         </div>
       </header>
-
       <main className="container mx-auto px-4 py-8 space-y-6">
         {/* Student Info Card */}
         <Card className="shadow-medium">
           <div className="p-6 space-y-4">
             <h2 className="text-2xl font-bold flex items-center gap-2">
-              <User className="w-6 h-6 text-primary" />
+              <Book className="w-6 h-6 text-primary" />
               Student Information
             </h2>
             <div className="grid md:grid-cols-3 gap-4">
@@ -146,63 +121,59 @@ const StudentDashboard = () => {
             </div>
           </div>
         </Card>
-
-        {/* Dashboard Buttons - Grid, Large, Colored */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 justify-center mt-4">
-          <Button
-            className="h-32 text-xl font-bold flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-blue-500 to-blue-700 text-white shadow-lg hover:from-blue-600 hover:to-blue-800 transition-all duration-200"
-            onClick={handleAttendanceClick}
-          >
-            <Book className="w-10 h-10 mb-1" />
-            Attendance
-          </Button>
-          <Button
-            className="h-32 text-xl font-bold flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-green-500 to-green-700 text-white shadow-lg hover:from-green-600 hover:to-green-800 transition-all duration-200"
-            onClick={() => setActiveTab('result')}
-          >
-            <BarChart2 className="w-10 h-10 mb-1" />
-            Result
-          </Button>
-          <Button
-            className="h-32 text-xl font-bold flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-yellow-400 to-yellow-600 text-white shadow-lg hover:from-yellow-500 hover:to-yellow-700 transition-all duration-200"
-            onClick={() => setActiveTab('announcements')}
-          >
-            <Megaphone className="w-10 h-10 mb-1" />
-            Announcements
-          </Button>
-          <Button
-            className="h-32 text-xl font-bold flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-pink-500 to-pink-700 text-white shadow-lg hover:from-pink-600 hover:to-pink-800 transition-all duration-200"
-            onClick={() => setActiveTab('voting')}
-          >
-            <Vote className="w-10 h-10 mb-1" />
-            Voting
-          </Button>
-        </div>
-
-        {/* Tab Content (except Attendance, which now redirects) */}
-        <div className="mt-8">
-          {activeTab === 'result' && (
-            <Card className="shadow-medium p-8 text-center">
-              <h2 className="text-2xl font-bold mb-2">Result</h2>
-              <p className="text-muted-foreground">Result feature coming soon.</p>
-            </Card>
-          )}
-          {activeTab === 'announcements' && (
-            <Card className="shadow-medium p-8 text-center">
-              <h2 className="text-2xl font-bold mb-2">Announcements</h2>
-              <p className="text-muted-foreground">Announcements feature coming soon.</p>
-            </Card>
-          )}
-          {activeTab === 'voting' && (
-            <Card className="shadow-medium p-8 text-center">
-              <h2 className="text-2xl font-bold mb-2">Voting</h2>
-              <p className="text-muted-foreground">Voting feature coming soon.</p>
-            </Card>
-          )}
-        </div>
+        {/* Overall Attendance */}
+        <Card className="shadow-medium mb-6">
+          <div className="p-6 text-center space-y-4">
+            <h2 className="text-2xl font-bold">Overall Attendance</h2>
+            <div className="flex justify-center py-4">
+              <CircularProgress 
+                percentage={attendance} 
+                size={160}
+                strokeWidth={12}
+              />
+            </div>
+          </div>
+        </Card>
+        {/* Detailed Attendance Records Table */}
+        <Card className="shadow-medium">
+          <div className="p-6 space-y-4">
+            <h2 className="text-2xl font-bold flex items-center gap-2">
+              <Book className="w-6 h-6 text-primary" />
+              Detailed Attendance Records
+            </h2>
+            <table className="w-full text-center border">
+              <thead>
+                <tr>
+                  <th>Faculty Name</th>
+                  <th>Subject</th>
+                  <th>Period</th>
+                  <th>Present</th>
+                  <th>Absent</th>
+                  <th>On Duty</th>
+                  <th>Total</th>
+                  <th>Percentage</th>
+                </tr>
+              </thead>
+              <tbody>
+                {subjects.map((row, idx) => (
+                  <tr key={idx}>
+                    <td>{row.facultyName}</td>
+                    <td>{row.subject}</td>
+                    <td>{row.period}</td>
+                    <td>{row.present}</td>
+                    <td>{row.absent}</td>
+                    <td>{row.onduty}</td>
+                    <td>{row.total}</td>
+                    <td>{row.percentage}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
       </main>
     </div>
   );
 };
 
-export default StudentDashboard;
+export default StudentAttendance;
