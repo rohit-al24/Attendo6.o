@@ -74,7 +74,10 @@ const StudentDashboard = () => {
           </div>
           <Button 
             variant="ghost" 
-            onClick={() => navigate("/login-selection")}
+            onClick={async () => {
+              await supabase.auth.signOut();
+              navigate("/login-selection");
+            }}
           >
             <LogOut className="w-4 h-4 mr-2" />
             Logout
