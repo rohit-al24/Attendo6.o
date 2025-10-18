@@ -16,6 +16,13 @@ const StudentDashboard = () => {
   const [openProfile, setOpenProfile] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [showLightning, setShowLightning] = useState(true);
+
+  useEffect(() => {
+    setShowLightning(true);
+    const timeout = setTimeout(() => setShowLightning(false), 500);
+    return () => clearTimeout(timeout);
+  }, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -98,9 +105,28 @@ const StudentDashboard = () => {
                   <span className="animate-fade-in">Student Information</span>
                 </h2>
                 <p className="text-sm text-muted-foreground">Name</p>
-                <p className="text-lg font-bold animate-name-f1 bg-gradient-to-r from-blue-700 via-blue-500 to-blue-400 bg-clip-text text-transparent">
-                  {student?.full_name}
-                </p>
+                <span className="relative inline-block">
+                  <p className="text-lg font-bold animate-name-f1 bg-gradient-to-r from-blue-700 via-blue-500 to-blue-400 bg-clip-text text-transparent">
+                    {student?.full_name}
+                  </p>
+                  {/* Thunder/Lightning SVG overlay, only show during animation */}
+                  {showLightning && (
+                    <svg className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none animate-lightning" width="60" height="40" viewBox="0 0 60 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <g filter="url(#glow)">
+                        <polyline points="30,0 25,18 35,18 20,40 40,22 30,22 40,0" stroke="#f7e600" strokeWidth="4" strokeLinejoin="round" strokeLinecap="round"/>
+                      </g>
+                      <defs>
+                        <filter id="glow" x="-10" y="-10" width="80" height="60" filterUnits="userSpaceOnUse">
+                          <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                          <feMerge>
+                            <feMergeNode in="coloredBlur"/>
+                            <feMergeNode in="SourceGraphic"/>
+                          </feMerge>
+                        </filter>
+                      </defs>
+                    </svg>
+                  )}
+                </span>
                 <p className="text-sm text-muted-foreground">Roll Number</p>
                 <p className="text-lg font-semibold">{student?.roll_number}</p>
                 <p className="text-sm text-muted-foreground">Department</p>
@@ -211,12 +237,21 @@ const StudentDashboard = () => {
             80% { transform: translateX(-2%) skewX(2deg) scaleX(1.05); }
             100% { opacity: 1; transform: none; filter: none; }
           }
+          @keyframes lightning {
+            0% { opacity: 0; transform: scaleY(0.7) scaleX(1.2) translateY(-10px); }
+            10% { opacity: 1; filter: drop-shadow(0 0 8px #fffbe6); }
+            20% { opacity: 1; filter: drop-shadow(0 0 16px #fffbe6); }
+            40% { opacity: 0.7; }
+            60% { opacity: 0.3; }
+            100% { opacity: 0; transform: scaleY(0.7) scaleX(1.2) translateY(-10px); }
+          }
           .animate-fade-in { animation: fade-in 0.8s ease; }
           .animate-fade-in-delay { animation: fade-in 1.2s ease; }
           .animate-slide-in { animation: slide-in 0.7s cubic-bezier(.42,0,.58,1); }
           .animate-bounce-in { animation: bounce-in 0.7s cubic-bezier(.42,0,.58,1); }
           .animate-coin-spin { animation: coin-spin 3s cubic-bezier(.42,0,.58,1); }
           .animate-name-f1 { animation: name-f1 0.85s cubic-bezier(.8,0,.2,1); }
+          .animate-lightning { animation: lightning 0.5s cubic-bezier(.8,0,.2,1); pointer-events: none; }
         `}</style>
       </main>
     </div>
