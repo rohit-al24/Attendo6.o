@@ -26,7 +26,7 @@ const StudentLogin = () => {
     setLoading(true);
     
     // Custom login using students table
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('students')
       .select('id, full_name, email, class_id, roll_number')
       .eq('roll_number', rollNumber)

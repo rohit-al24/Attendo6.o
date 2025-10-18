@@ -25,19 +25,24 @@ interface SubjectStats {
   percentage: number;
 }
 
-const AdvisorAttendanceReport = () => {
+const AdvisorAttendanceReport = ({ classId: propClassId }: { classId?: string }) => {
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const classId = propClassId || searchParams.get("classId") || "";
+  const navigate = useNavigate();
+
   // State for advisor and section
   const [advisorName, setAdvisorName] = useState<string>("");
   const [section, setSection] = useState<string>("");
+  const [studentStats, setStudentStats] = useState<Record<string, { name: string; roll: string; subjects: SubjectStats[] }>>({});
+  const [loading, setLoading] = useState(false);
+
   // Download PDF handler
   const handleDownloadPDF = () => {
     const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
-    // Banner image
     const pageWidth = doc.internal.pageSize.getWidth();
-    const bannerImg = new window.Image();
-    bannerImg.src = '/banner.jpg';
-    bannerImg.onload = function () {
-      doc.addImage(bannerImg, 'JPEG', pageWidth / 2 - 200, 10, 400, 60);
+
+    const drawContent = () => {
       let y = 80;
       doc.setFontSize(12);
       doc.setTextColor(0, 0, 0);
@@ -48,7 +53,7 @@ const AdvisorAttendanceReport = () => {
       doc.text(`Class Advisor: ${advisorName || "Advisor Name"}`, 40, y);
       doc.text(`Section: ${section || classId || "Section"}`, 300, y);
       y += 18;
-      Object.entries(studentStats).forEach(([studentId, s], idx) => {
+      Object.entries(studentStats).forEach(([studentId, s]) => {
         doc.setFontSize(10);
         doc.setFont("helvetica", "bold");
         doc.text(`Student: ${s.name} (${s.roll})`, 40, y);
@@ -78,51 +83,23 @@ const AdvisorAttendanceReport = () => {
           y = lastAutoTable.finalY + 18;
         }
       });
+    };
+
+    // Load banner image then draw content
+    const bannerImg = new window.Image();
+    bannerImg.src = '/banner.png';
+    bannerImg.onload = () => {
+      doc.addImage(bannerImg, 'JPEG', pageWidth / 2 - 200, 10, 400, 60);
+      drawContent();
       doc.save("attendance_report.pdf");
     };
-  // Class details
-  doc.setFontSize(11);
-  doc.text(`Class Advisor: ${advisorName || "Advisor Name"}`, 40, y);
-  doc.text(`Section: ${section || classId || "Section"}`, 300, y);
-    y += 18;
-    Object.entries(studentStats).forEach(([studentId, s], idx) => {
-      doc.setFontSize(10);
-      doc.setFont("helvetica", "bold");
-      doc.text(`Student: ${s.name} (${s.roll})`, 40, y);
-      doc.setFont("helvetica", "normal");
-      y += 12;
-      autoTable(doc, {
-        startY: y,
-        head: [["Faculty Name", "Subject", "Present", "Absent", "On Duty", "Total", "%"]],
-        body: s.subjects.map(subj => [
-          subj.faculty_name || "N/A",
-          subj.subject || "N/A",
-          subj.present,
-          subj.absent,
-          subj.onduty,
-          subj.total,
-          subj.percentage !== undefined ? `${subj.percentage.toFixed(2)}%` : "-"
-        ]),
-        theme: 'grid',
-        styles: { fontSize: 9, cellPadding: 3 },
-        headStyles: { fillColor: [41, 128, 255], textColor: 255, fontSize: 10, halign: 'center' },
-        alternateRowStyles: { fillColor: [245, 245, 245] },
-        margin: { left: 40, right: 40 },
-        tableWidth: 'auto',
-      });
-      const lastAutoTable = (doc as any).lastAutoTable;
-      if (lastAutoTable && lastAutoTable.finalY) {
-        y = lastAutoTable.finalY + 18;
-      }
-    });
-    doc.save("attendance_report.pdf");
+    // fallback if image fails to load
+    bannerImg.onerror = () => {
+      drawContent();
+      doc.save("attendance_report.pdf");
+    };
+
   };
-  const [studentStats, setStudentStats] = useState<Record<string, { name: string; roll: string; subjects: SubjectStats[] }>>({});
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
-  const classId = searchParams.get("classId") || "";
 
   useEffect(() => {
     if (!classId) return;

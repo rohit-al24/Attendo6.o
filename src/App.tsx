@@ -16,9 +16,11 @@ import FacultyDashboard from "./pages/FacultyDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import FacultyManagement from "./pages/admin/FacultyManagement";
 import StudentManagement from "./pages/admin/StudentManagement";
+import FacultyActivities from "./pages/admin/FacultyActivities";
 import AttendanceMarking from "./pages/faculty/AttendanceMarking";
 import TimetableManagement from "./pages/faculty/TimetableManagement";
 import AdvisorAttendanceReport from "./pages/faculty/AdvisorAttendanceReport";
+import AdvisorAttendanceEdit from "./pages/faculty/AdvisorAttendanceEdit";
 import NotFound from "./pages/NotFound";
 
 
@@ -49,9 +51,11 @@ const App = () => (
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
           <Route path="/admin/faculty" element={<FacultyManagement />} />
           <Route path="/admin/students" element={<StudentManagement />} />
+          <Route path="/admin/faculty-activities" element={<FacultyActivities />} />
           <Route path="/faculty/attendance-marking" element={<AttendanceMarking />} />
           <Route path="/faculty/timetable-management" element={<TimetableManagement />} />
           <Route path="/faculty/advisor-attendance-report" element={<AdvisorAttendanceReportWrapper />} />
+          <Route path="/faculty/AdvisorAttendanceEdit" element={<AdvisorAttendanceEdit />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
