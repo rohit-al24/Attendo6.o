@@ -83,7 +83,6 @@ const TimetableManagement = () => {
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [facultyList, setFacultyList] = useState<string[]>([]);
-  const [subjectFacultyMap, setSubjectFacultyMap] = useState<Record<string, string>>({});
   const [classList, setClassList] = useState<{ id: string; name: string }[]>([]);
   const [classId, setClassId] = useState<string>("");
   const [timetable, setTimetable] = useState<Period[]>([]);
@@ -143,23 +142,21 @@ const TimetableManagement = () => {
       }
       // Build full grid (fill missing cells as Free Period)
       const fullGrid: Period[] = [];
-      const subjectFaculty: Record<string, string> = {};
       for (let dayIdx = 0; dayIdx < days.length; dayIdx++) {
         const day = days[dayIdx];
         for (const periodNum of periods) {
           const dbPeriod = timetableData?.find(
             (t: any) => t.day_of_week === dayIdx + 1 && t.period_number === periodNum
           );
-          const subject = dbPeriod?.subject || "";
-          const faculty = dbPeriod?.faculty_id ? facultyMap[dbPeriod.faculty_id] || "" : "";
-          fullGrid.push({ day, period: periodNum, subject, faculty });
-          if (subject && faculty && !subjectFaculty[subject]) {
-            subjectFaculty[subject] = faculty;
-          }
+          fullGrid.push({
+            day,
+            period: periodNum,
+            subject: dbPeriod?.subject || "",
+            faculty: dbPeriod?.faculty_id ? facultyMap[dbPeriod.faculty_id] || "" : ""
+          });
         }
       }
       setTimetable(fullGrid);
-      setSubjectFacultyMap(subjectFaculty);
       setLoading(false);
     })();
   }, [classId, isEditing]);
@@ -207,124 +204,106 @@ const TimetableManagement = () => {
   };
 
   return (
-  <div className="min-h-screen bg-gradient-to-br from-blue-100 via-indigo-100 to-pink-100">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
       <header className="border-b bg-card shadow-soft">
         <div className="container mx-auto px-4 py-4">
           <Button variant="ghost" onClick={() => navigate("/faculty-dashboard")}> <ArrowLeft className="w-4 h-4 mr-2" /> Back to Dashboard </Button>
         </div>
       </header>
-  <main className="container mx-auto px-2 sm:px-4 py-4 sm:py-8 space-y-4 sm:space-y-6">
-        <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
-          <label className="font-semibold text-lg text-indigo-700">Select Class:</label>
-          <select value={classId} onChange={e => setClassId(e.target.value)} className="border-2 border-indigo-300 rounded px-3 py-2 focus:ring-2 focus:ring-indigo-400">
+      <main className="container mx-auto px-4 py-8 space-y-6">
+        <div className="mb-6">
+          <label className="font-semibold mr-2">Select Class:</label>
+          <select value={classId} onChange={e => setClassId(e.target.value)} className="border rounded px-2 py-1">
             {classList.map(cls => (
               <option key={cls.id} value={cls.id}>{cls.name}</option>
             ))}
           </select>
         </div>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4 mb-2">
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-indigo-800 mb-1">Timetable Management</h1>
-            <p className="text-sm text-indigo-500">Managing: {classList.find(c => c.id === classId)?.name || ""}</p>
+            <h1 className="text-3xl font-bold">Timetable Management</h1>
+            <p className="text-muted-foreground">Managing: {classList.find(c => c.id === classId)?.name || ""}</p>
           </div>
-          <div className="flex gap-2 w-full sm:w-auto">
+          <div className="flex gap-2">
             {!isEditing ? (
-              <Button onClick={() => setIsEditing(true)} className="bg-gradient-to-r from-pink-500 via-indigo-500 to-blue-500 text-white font-semibold w-full sm:w-auto">
+              <Button onClick={() => setIsEditing(true)} className="gradient-secondary">
                 <Edit className="w-4 h-4 mr-2" /> Edit Timetable
               </Button>
             ) : (
               <>
-                <Button onClick={handleSave} className="bg-gradient-to-r from-green-400 via-blue-500 to-indigo-500 text-white font-semibold w-full sm:w-auto">
+                <Button onClick={handleSave} className="gradient-primary">
                   <Save className="w-4 h-4 mr-2" /> Save Changes
                 </Button>
-                <Button variant="outline" onClick={() => setIsEditing(false)} className="w-full sm:w-auto">
+                <Button variant="outline" onClick={() => setIsEditing(false)}>
                   Cancel
                 </Button>
               </>
             )}
           </div>
         </div>
-        {/* Assign Subject Faculty section */}
-        {isEditing && (
-          <Card className="shadow-lg mb-6 bg-gradient-to-r from-indigo-50 to-pink-50">
-            <div className="p-4">
-              <h2 className="font-bold mb-2 text-indigo-700">Assign Subject Faculty</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {(classId && SUBJECTS_BY_CLASS[classId] ? SUBJECTS_BY_CLASS[classId] : DEFAULT_SUBJECTS).map(subj => (
-                  <div key={subj} className="flex items-center gap-2">
-                    <span className="font-medium w-2/5">{subj}</span>
-                    <select
-                      value={subjectFacultyMap[subj] || ""}
-                      onChange={e => {
-                        const selectedFaculty = e.target.value;
-                        setSubjectFacultyMap(prev => ({ ...prev, [subj]: selectedFaculty }));
-                        setTimetable(tt => tt.map(t => t.subject === subj ? { ...t, faculty: selectedFaculty } : t));
-                      }}
-                      className="border rounded px-2 py-1 w-3/5"
-                    >
-                      <option value="">Select Faculty</option>
-                      {facultyList.map(fac => (
-                        <option key={fac} value={fac}>{fac}</option>
-                      ))}
-                    </select>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </Card>
-        )}
-        <Card className="shadow-lg overflow-x-auto bg-white/80">
-          <div className="p-2 sm:p-6">
-            <div className="w-full overflow-x-auto">
-              <table className="min-w-[600px] w-full border-collapse text-sm">
-                <thead className="sticky top-0 z-10 bg-gradient-to-r from-indigo-200 to-pink-200">
-                  <tr className="border-b border-indigo-300">
-                    <th className="px-2 py-2 text-indigo-800 font-bold">Day</th>
-                    {periods.map(periodNum => (
-                      <th key={periodNum} className="px-2 py-2 text-indigo-700 font-semibold">Period {periodNum}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {days.map((day, dayIdx) => (
-                    <tr key={day} className="border-b border-indigo-100">
-                      <td className="font-semibold px-2 py-2 text-indigo-700 bg-indigo-50">{day} <span className="text-xs text-indigo-400">({dayIdx + 1})</span></td>
-                      {periods.map(periodNum => {
-                        const period = getPeriodData(day, periodNum);
-                        return (
-                          <td key={periodNum} className="px-2 py-2">
-                            {isEditing ? (
-                              <div className="flex flex-col gap-1">
-                                <select
-                                  value={period?.subject || ""}
-                                  onChange={e => {
-                                    setTimetable(tt => tt.map(t =>
-                                      t.day === day && t.period === periodNum ? { ...t, subject: e.target.value } : t
-                                    ));
-                                  }}
-                                  className="border-2 border-indigo-200 rounded px-1 py-0.5 focus:ring-2 focus:ring-indigo-400 text-xs"
-                                  style={{ maxWidth: 80, width: 80, minWidth: 0, maxHeight: 32 }}
-                                >
-                                  <option value="">Select</option>
-                                  {(classId && SUBJECTS_BY_CLASS[classId] ? SUBJECTS_BY_CLASS[classId] : DEFAULT_SUBJECTS).map(subj => (
-                                    <option key={subj} value={subj} className="truncate text-xs">{subj}</option>
-                                  ))}
-                                </select>
-                              </div>
-                            ) : (
-                              <div>
-                                <div className="font-medium text-indigo-900">{period?.subject || <span className="text-indigo-300">Free</span>}</div>
-                                <div className="text-xs text-pink-500">{period?.faculty || ""}</div>
-                              </div>
-                            )}
-                          </td>
-                        );
-                      })}
-                    </tr>
+        <Card className="shadow-medium overflow-x-auto">
+          <div className="p-6">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b">
+                  <th className="px-2 py-1">Day</th>
+                  {periods.map(periodNum => (
+                    <th key={periodNum} className="px-2 py-1">Period {periodNum}</th>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </tr>
+              </thead>
+              <tbody>
+                {days.map((day, dayIdx) => (
+                  <tr key={day} className="border-b">
+                    <td className="font-semibold px-2 py-1">{day} <span className="text-xs text-muted-foreground">({dayIdx + 1})</span></td>
+                    {periods.map(periodNum => {
+                      const period = getPeriodData(day, periodNum);
+                      return (
+                        <td key={periodNum} className="px-2 py-1">
+                          {isEditing ? (
+                            <div className="flex flex-col gap-1">
+                              <select
+                                value={period?.subject || ""}
+                                onChange={e => {
+                                  setTimetable(tt => tt.map(t =>
+                                    t.day === day && t.period === periodNum ? { ...t, subject: e.target.value } : t
+                                  ));
+                                }}
+                                className="border rounded px-1 py-0.5 mb-1"
+                              >
+                                <option value="">Select Subject</option>
+                                {(classId && SUBJECTS_BY_CLASS[classId] ? SUBJECTS_BY_CLASS[classId] : DEFAULT_SUBJECTS).map(subj => (
+                                  <option key={subj} value={subj}>{subj}</option>
+                                ))}
+                              </select>
+                              <select
+                                value={period?.faculty || ""}
+                                onChange={e => {
+                                  setTimetable(tt => tt.map(t =>
+                                    t.day === day && t.period === periodNum ? { ...t, faculty: e.target.value } : t
+                                  ));
+                                }}
+                                className="border rounded px-1 py-0.5"
+                              >
+                                <option value="">Select Faculty</option>
+                                {facultyList.map(fac => (
+                                  <option key={fac} value={fac}>{fac}</option>
+                                ))}
+                              </select>
+                            </div>
+                          ) : (
+                            <div>
+                              <div className="font-medium">{period?.subject || <span className="text-muted-foreground">Free</span>}</div>
+                              <div className="text-xs text-muted-foreground">{period?.faculty || ""}</div>
+                            </div>
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </Card>
       </main>

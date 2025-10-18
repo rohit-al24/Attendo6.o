@@ -12,7 +12,6 @@ import StudentLogin from "./pages/StudentLogin";
 import FacultyLogin from "./pages/FacultyLogin";
 import AdminLogin from "./pages/AdminLogin";
 import StudentDashboard from "./pages/StudentDashboard";
-import StudentAttendance from "./pages/StudentAttendance";
 import FacultyDashboard from "./pages/FacultyDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import FacultyManagement from "./pages/admin/FacultyManagement";
@@ -48,7 +47,6 @@ const App = () => (
           <Route path="/faculty-login" element={<FacultyLogin />} />
           <Route path="/admin-login" element={<AdminLogin />} />
           <Route path="/student-dashboard" element={<StudentDashboard />} />
-          <Route path="/student-attendance" element={<StudentAttendance />} />
           <Route path="/faculty-dashboard" element={<FacultyDashboard />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
           <Route path="/admin/faculty" element={<FacultyManagement />} />

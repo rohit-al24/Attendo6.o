@@ -68,8 +68,7 @@ const StudentLogin = () => {
                 type="text"
                 placeholder="Enter your roll number"
                 value={rollNumber}
-                onChange={(e) => setRollNumber(e.target.value.toUpperCase())}
-                style={{ textTransform: 'uppercase' }}
+                onChange={(e) => setRollNumber(e.target.value)}
                 required
               />
             </div>
