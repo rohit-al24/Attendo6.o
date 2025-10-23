@@ -119,6 +119,22 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
     font-feature-settings: 'rlig' 1, 'calt' 1;
+    /* Prevent horizontal scroll on mobile */
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+  }
+
+  html {
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+  }
+
+  /* Media elements should not overflow container on small screens */
+  img, video, canvas, svg {
+    max-width: 100%;
+    height: auto;
   }
 }
 
@@ -153,5 +169,10 @@ All colors MUST be HSL.
   
   .transition-bounce {
     transition: var(--transition-bounce);
+  }
+
+  /* Optional utility to add safe top padding where supported */
+  .safe-top {
+    padding-top: env(safe-area-inset-top, 0px);
   }
 }

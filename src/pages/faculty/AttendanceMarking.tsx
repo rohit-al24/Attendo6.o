@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import MobileHeader from "@/components/MobileHeader";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,25 +29,26 @@ const AttendanceMarking = () => {
   const time = location.state?.time || '';
 
   const [classInfo, setClassInfo] = useState<any>(null);
-  const [classList, setClassList] = useState<any[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
+  const [popupStudentId, setPopupStudentId] = useState<string | null>(null);
 
-  // Fetch all classes for selector
-  useEffect(() => {
-    const fetchClasses = async () => {
-      const { data } = await supabase
-        .from('classes')
-        .select('id, class_name, department, section, year');
-      setClassList(data || []);
-    };
-    fetchClasses();
-  }, []);
+  // Support continuous periods passed via query param `periods=1,2,3`
+  const searchParams = new URLSearchParams(location.search || "");
+  const periodsParam = searchParams.get('periods');
+  const selectedPeriods: number[] = periodsParam
+    ? periodsParam.split(',').map(p => parseInt(p, 10)).filter(n => !Number.isNaN(n))
+    : [period];
+
+  // No class selector: class is provided by Faculty Dashboard via router state
 
   // Fetch class info and students for selected class
   useEffect(() => {
     if (!classId) {
       setClassInfo(null);
       setStudents([]);
+      // If no classId provided, redirect back with a message
+      toast.error('No class selected. Please pick a class from your dashboard.');
+      navigate('/faculty-dashboard');
       return;
     }
     const fetchClass = async () => {
@@ -69,9 +71,8 @@ const AttendanceMarking = () => {
   }, [classId]);
 
   const updateStudentStatus = (id: string, status: "present" | "absent" | "leave" | "onduty") => {
-    setStudents(students.map(s => 
-      s.id === id ? { ...s, status } : s
-    ));
+    setStudents(students.map(s => s.id === id ? { ...s, status } : s));
+    setPopupStudentId(null); // Close modal after selection
   };
 
   const handleSaveAttendance = async () => {
@@ -89,17 +90,21 @@ const AttendanceMarking = () => {
       toast.error('Faculty ID or user_id not found. Please re-login.');
       return;
     }
-    const records = students.map(s => ({
-      student_id: s.id,
-      status: s.status,
-      class_id: classId,
-      faculty_id: facultyId,
-      date: today,
-      period_number: period,
-      subject: subject,
-      marked_by: markedBy,
-      marked_at: now,
-    }));
+    // If multiple continuous periods are selected, create one record per period
+    const periodsToSave = selectedPeriods.length ? selectedPeriods : [period];
+    const records = students.flatMap(s => (
+      periodsToSave.map(pn => ({
+        student_id: s.id,
+        status: s.status,
+        class_id: classId,
+        faculty_id: facultyId,
+        date: today,
+        period_number: pn,
+        subject: subject,
+        marked_by: markedBy,
+        marked_at: now,
+      }))
+    ));
     const { error } = await supabase
       .from('attendance_records')
       .insert(records);
@@ -124,6 +129,7 @@ const AttendanceMarking = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
+      <MobileHeader title="Attendance Marking" />
       <header className="border-b bg-card shadow-soft">
         <div className="container mx-auto px-4 py-4">
           <Button variant="ghost" onClick={() => navigate("/faculty-dashboard")}>
@@ -134,22 +140,13 @@ const AttendanceMarking = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8 space-y-6">
-        {/* Class Selector & Info */}
+        {/* Class Info */}
         <Card className="shadow-medium">
           <div className="p-6">
-            <div className="mb-4">
-              <label className="font-semibold mr-2">Select Class:</label>
-              <select value={classId} onChange={e => setClassId(e.target.value)} className="border rounded px-2 py-1">
-                <option value="">-- Select Class --</option>
-                {classList.map(cls => (
-                  <option key={cls.id} value={cls.id}>{cls.class_name}</option>
-                ))}
-              </select>
-            </div>
             <div className="grid md:grid-cols-4 gap-4">
               <div>
-                <p className="text-sm text-muted-foreground">Period</p>
-                <p className="text-lg font-semibold">Period {period}</p>
+                <p className="text-sm text-muted-foreground">Period(s)</p>
+                <p className="text-lg font-semibold">{selectedPeriods.join(', ')}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Time</p>
@@ -211,40 +208,31 @@ const AttendanceMarking = () => {
                         <p className="font-semibold">{student.full_name}</p>
                         <p className="text-sm text-muted-foreground">{student.roll_number}</p>
                       </div>
-                      <RadioGroup
-                        value={student.status}
-                        onValueChange={(value: "present" | "absent" | "leave" | "onduty") => 
-                          updateStudentStatus(student.id, value)
-                        }
-                        className="flex gap-6"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="present" id={`${student.id}-present`} />
-                          <Label htmlFor={`${student.id}-present`} className="text-secondary font-medium cursor-pointer">
-                            Present
-                          </Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="absent" id={`${student.id}-absent`} />
-                          <Label htmlFor={`${student.id}-absent`} className="text-destructive font-medium cursor-pointer">
-                            Absent
-                          </Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="leave" id={`${student.id}-leave`} />
-                          <Label htmlFor={`${student.id}-leave`} className="text-accent font-medium cursor-pointer">
-                            Leave
-                          </Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="onduty" id={`${student.id}-onduty`} />
-                          <Label htmlFor={`${student.id}-onduty`} className="text-primary font-medium cursor-pointer">
-                            On Duty
-                          </Label>
-                        </div>
-                      </RadioGroup>
+                      <div>
+                        <Button
+                          className={`font-bold px-4 py-2 rounded shadow ${student.status === 'present' ? 'bg-green-500 text-white' : student.status === 'absent' ? 'bg-red-500 text-white' : student.status === 'leave' ? 'bg-yellow-500 text-white' : student.status === 'onduty' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'}`}
+                          onClick={() => setPopupStudentId(student.id)}
+                        >
+                          {student.status.charAt(0).toUpperCase() + student.status.slice(1)}
+                        </Button>
+                      </div>
                     </div>
                   </div>
+                  {/* Mobile-friendly bottom sheet modal for status selection */}
+                  {popupStudentId === student.id && (
+                    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black bg-opacity-60">
+                      <div className="w-full max-w-md mx-auto bg-white rounded-t-2xl shadow-lg p-6 animate-slide-up" style={{ minHeight: '50vh' }}>
+                        <h3 className="text-xl font-bold mb-6 text-center">Select Attendance Status</h3>
+                        <div className="grid grid-cols-1 gap-4 mb-6">
+                          <Button className="bg-green-500 hover:bg-green-600 text-white text-lg py-4 rounded-lg" onClick={() => updateStudentStatus(student.id, "present")}>Present</Button>
+                          <Button className="bg-red-500 hover:bg-red-600 text-white text-lg py-4 rounded-lg" onClick={() => updateStudentStatus(student.id, "absent")}>Absent</Button>
+                          <Button className="bg-yellow-500 hover:bg-yellow-600 text-white text-lg py-4 rounded-lg" onClick={() => updateStudentStatus(student.id, "leave")}>Leave</Button>
+                          <Button className="bg-blue-500 hover:bg-blue-600 text-white text-lg py-4 rounded-lg" onClick={() => updateStudentStatus(student.id, "onduty")}>On Duty</Button>
+                        </div>
+                        <Button variant="outline" className="w-full py-3 rounded-lg text-lg" onClick={() => setPopupStudentId(null)}>Cancel</Button>
+                      </div>
+                    </div>
+                  )}
                 </Card>
               ))}
             </div>

@@ -2,8 +2,7 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, Eye } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Download, Eye } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -12,9 +11,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import CircularProgress from "@/components/CircularProgress";
+import MobileHeader from "@/components/MobileHeader";
 
 const StudentManagement = () => {
-  const navigate = useNavigate();
   const [selectedClass, setSelectedClass] = useState("");
   const [classList, setClassList] = useState<any[]>([]);
 
@@ -86,14 +85,7 @@ const StudentManagement = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
-      <header className="border-b bg-card shadow-soft">
-        <div className="container mx-auto px-4 py-4">
-          <Button variant="ghost" onClick={() => navigate("/admin-dashboard")}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Dashboard
-          </Button>
-        </div>
-      </header>
+      <MobileHeader title="Student Management" />
 
       <main className="container mx-auto px-4 py-8 space-y-6">
         <h1 className="text-3xl font-bold">Student Management</h1>

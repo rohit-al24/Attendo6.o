@@ -1,3 +1,21 @@
+import MobileHeader from "@/components/MobileHeader";
+// Helper: Find continuous periods for a faculty on a given day
+function getContinuousPeriods(timetable: Period[], day: string, faculty: string) {
+  const periodsForDay = timetable.filter(t => t.day === day && t.faculty === faculty);
+  const sortedPeriods = periodsForDay.map(t => t.period).sort((a, b) => a - b);
+  const blocks: number[][] = [];
+  let currentBlock: number[] = [];
+  for (let i = 0; i < sortedPeriods.length; i++) {
+    if (currentBlock.length === 0 || sortedPeriods[i] === currentBlock[currentBlock.length - 1] + 1) {
+      currentBlock.push(sortedPeriods[i]);
+    } else {
+      blocks.push(currentBlock);
+      currentBlock = [sortedPeriods[i]];
+    }
+  }
+  if (currentBlock.length) blocks.push(currentBlock);
+  return blocks.filter(b => b.length > 1); // Only return blocks of 2 or more
+}
 
 // Hardcoded subject lists per class (from seed data)
 const SUBJECTS_BY_CLASS: Record<string, string[]> = {
@@ -52,6 +70,7 @@ const DEFAULT_SUBJECTS = [
 ];
 
 import { useState, useEffect } from "react";
+import { getSubjects, Subject } from "@/lib/subjects";
 
 // Hardcoded subject lists per class (from seed data)
 import { supabase } from "@/integrations/supabase/client";
@@ -59,7 +78,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft, Save, Edit } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   Select,
   SelectContent,
@@ -83,27 +102,49 @@ const TimetableManagement = () => {
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [facultyList, setFacultyList] = useState<string[]>([]);
-  const [subjectFacultyMap, setSubjectFacultyMap] = useState<Record<string, string>>({});
-  const [classList, setClassList] = useState<{ id: string; name: string }[]>([]);
-  const [classId, setClassId] = useState<string>("");
+  // Subject-to-faculty assignments: { subjectId, facultyName }
+  const [assignments, setAssignments] = useState<{ subjectId: string; faculty: string }[]>([]);
+  const [selectedSubjectId, setSelectedSubjectId] = useState<string>("");
+  const [selectedFaculty, setSelectedFaculty] = useState<string>("");
+  // Get all subjects from subjects.ts
+  const allSubjects: Subject[] = getSubjects();
+  // Assigned subjects for dropdowns
+  const assignedSubjects = assignments.map(a => {
+    const subj = allSubjects.find(s => s.id === a.subjectId);
+    return subj ? { ...subj, faculty: a.faculty } : null;
+  }).filter(Boolean) as (Subject & { faculty: string })[];
+  // Handler to assign subject to faculty (replace if exists)
+  const handleAssign = () => {
+    if (!selectedSubjectId || !selectedFaculty) return;
+    setAssignments(prev => {
+      const filtered = prev.filter(a => a.subjectId !== selectedSubjectId);
+      return [...filtered, { subjectId: selectedSubjectId, faculty: selectedFaculty }];
+    });
+    setSelectedSubjectId("");
+    setSelectedFaculty("");
+  };
+  const location = useLocation();
+  const [classId, setClassId] = useState<string>(location.state?.classId || "");
+  const [className, setClassName] = useState<string>("");
   const [timetable, setTimetable] = useState<Period[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Fetch all classes and set default class
+  // Ensure classId provided via navigation; fetch class name
   useEffect(() => {
     (async () => {
-      setLoading(true);
-      const { data: classes, error: classError } = await supabase
-        .from("classes")
-        .select("id,class_name");
-      if (classError) toast.error("Error loading classes");
-      if (classes && classes.length > 0) {
-        setClassList(classes.map((c: any) => ({ id: c.id, name: c.class_name })));
-        setClassId(classes[0].id);
+      if (!classId) {
+        toast.error("No class selected. Open Manage Timetable from Advisor tab.");
+        navigate("/faculty-dashboard");
+        return;
       }
-      setLoading(false);
+      const { data, error } = await supabase
+        .from("classes")
+        .select("class_name")
+        .eq("id", classId)
+        .single();
+      if (!error && data) setClassName(data.class_name);
     })();
-  }, []);
+  }, [classId, navigate]);
 
   // Fetch faculty list
   useEffect(() => {
@@ -143,23 +184,21 @@ const TimetableManagement = () => {
       }
       // Build full grid (fill missing cells as Free Period)
       const fullGrid: Period[] = [];
-      const subjectFaculty: Record<string, string> = {};
       for (let dayIdx = 0; dayIdx < days.length; dayIdx++) {
         const day = days[dayIdx];
         for (const periodNum of periods) {
           const dbPeriod = timetableData?.find(
             (t: any) => t.day_of_week === dayIdx + 1 && t.period_number === periodNum
           );
-          const subject = dbPeriod?.subject || "";
-          const faculty = dbPeriod?.faculty_id ? facultyMap[dbPeriod.faculty_id] || "" : "";
-          fullGrid.push({ day, period: periodNum, subject, faculty });
-          if (subject && faculty && !subjectFaculty[subject]) {
-            subjectFaculty[subject] = faculty;
-          }
+          fullGrid.push({
+            day,
+            period: periodNum,
+            subject: dbPeriod?.subject || "",
+            faculty: dbPeriod?.faculty_id ? facultyMap[dbPeriod.faculty_id] || "" : ""
+          });
         }
       }
       setTimetable(fullGrid);
-      setSubjectFacultyMap(subjectFaculty);
       setLoading(false);
     })();
   }, [classId, isEditing]);
@@ -206,125 +245,158 @@ const TimetableManagement = () => {
     setLoading(false);
   };
 
+  // Handler: Mark attendance for continuous periods
+  function handleMarkAttendance(day: string, startPeriod: number, faculty: string, count: number) {
+    // TODO: Implement attendance logic here
+    // Should mark attendance for all students for 'count' periods
+    // Example: send attendance for periods startPeriod to startPeriod+count-1 for the given day and faculty
+    alert(`Attendance marked for ${faculty} on ${day}, periods ${startPeriod} to ${startPeriod + count - 1} (count=${count})`);
+  }
+
   return (
-  <div className="min-h-screen bg-gradient-to-br from-blue-100 via-indigo-100 to-pink-100">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
+      <MobileHeader title="Timetable" />
       <header className="border-b bg-card shadow-soft">
         <div className="container mx-auto px-4 py-4">
           <Button variant="ghost" onClick={() => navigate("/faculty-dashboard")}> <ArrowLeft className="w-4 h-4 mr-2" /> Back to Dashboard </Button>
         </div>
       </header>
-  <main className="container mx-auto px-2 sm:px-4 py-4 sm:py-8 space-y-4 sm:space-y-6">
-        <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
-          <label className="font-semibold text-lg text-indigo-700">Select Class:</label>
-          <select value={classId} onChange={e => setClassId(e.target.value)} className="border-2 border-indigo-300 rounded px-3 py-2 focus:ring-2 focus:ring-indigo-400">
-            {classList.map(cls => (
-              <option key={cls.id} value={cls.id}>{cls.name}</option>
-            ))}
-          </select>
-        </div>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4 mb-2">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-indigo-800 mb-1">Timetable Management</h1>
-            <p className="text-sm text-indigo-500">Managing: {classList.find(c => c.id === classId)?.name || ""}</p>
+      <main className="container mx-auto px-4 py-8 space-y-6">
+        {/* Subject-to-Faculty Assignment Section: Only show in edit mode */}
+        {isEditing && (
+          <div className="mb-6 p-4 border rounded bg-muted/30">
+            <h2 className="font-semibold mb-2">Assign Subjects to Faculty</h2>
+            <div className="flex gap-2 mb-2">
+              <select value={selectedSubjectId} onChange={e => setSelectedSubjectId(e.target.value)} className="border rounded px-2 py-1">
+                <option value="">Select Subject</option>
+                {allSubjects.map(subj => (
+                  <option key={subj.id} value={subj.id}>{subj.name} ({subj.courseCode})</option>
+                ))}
+              </select>
+              <select value={selectedFaculty} onChange={e => setSelectedFaculty(e.target.value)} className="border rounded px-2 py-1">
+                <option value="">Select Faculty</option>
+                {facultyList.map(fac => (
+                  <option key={fac} value={fac}>{fac}</option>
+                ))}
+              </select>
+              <Button onClick={handleAssign}>Assign</Button>
+            </div>
+            {/* List of current assignments */}
+            <div className="flex flex-wrap gap-2">
+              {assignedSubjects.map(a => (
+                <span key={a.id} className="px-2 py-1 bg-card rounded border text-xs">{a.name} ({a.courseCode}) → {a.faculty}</span>
+              ))}
+            </div>
           </div>
-          <div className="flex gap-2 w-full sm:w-auto">
+        )}
+        {/* Class selector removed: advisor-selected class is used */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Timetable Management</h1>
+            <p className="text-muted-foreground">Managing: {className}</p>
+          </div>
+          <div className="flex gap-2">
             {!isEditing ? (
-              <Button onClick={() => setIsEditing(true)} className="bg-gradient-to-r from-pink-500 via-indigo-500 to-blue-500 text-white font-semibold w-full sm:w-auto">
+              <Button onClick={() => setIsEditing(true)} className="gradient-secondary">
                 <Edit className="w-4 h-4 mr-2" /> Edit Timetable
               </Button>
             ) : (
               <>
-                <Button onClick={handleSave} className="bg-gradient-to-r from-green-400 via-blue-500 to-indigo-500 text-white font-semibold w-full sm:w-auto">
+                <Button onClick={handleSave} className="gradient-primary">
                   <Save className="w-4 h-4 mr-2" /> Save Changes
                 </Button>
-                <Button variant="outline" onClick={() => setIsEditing(false)} className="w-full sm:w-auto">
+                <Button variant="outline" onClick={() => setIsEditing(false)}>
                   Cancel
                 </Button>
               </>
             )}
           </div>
         </div>
-        {/* Assign Subject Faculty section */}
-        {isEditing && (
-          <Card className="shadow-lg mb-6 bg-gradient-to-r from-indigo-50 to-pink-50">
-            <div className="p-4">
-              <h2 className="font-bold mb-2 text-indigo-700">Assign Subject Faculty</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {(classId && SUBJECTS_BY_CLASS[classId] ? SUBJECTS_BY_CLASS[classId] : DEFAULT_SUBJECTS).map(subj => (
-                  <div key={subj} className="flex items-center gap-2">
-                    <span className="font-medium w-2/5">{subj}</span>
-                    <select
-                      value={subjectFacultyMap[subj] || ""}
-                      onChange={e => {
-                        const selectedFaculty = e.target.value;
-                        setSubjectFacultyMap(prev => ({ ...prev, [subj]: selectedFaculty }));
-                        setTimetable(tt => tt.map(t => t.subject === subj ? { ...t, faculty: selectedFaculty } : t));
-                      }}
-                      className="border rounded px-2 py-1 w-3/5"
-                    >
-                      <option value="">Select Faculty</option>
-                      {facultyList.map(fac => (
-                        <option key={fac} value={fac}>{fac}</option>
-                      ))}
-                    </select>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </Card>
-        )}
-        <Card className="shadow-lg overflow-x-auto bg-white/80">
-          <div className="p-2 sm:p-6">
-            <div className="w-full overflow-x-auto">
-              <table className="min-w-[600px] w-full border-collapse text-sm">
-                <thead className="sticky top-0 z-10 bg-gradient-to-r from-indigo-200 to-pink-200">
-                  <tr className="border-b border-indigo-300">
-                    <th className="px-2 py-2 text-indigo-800 font-bold">Day</th>
-                    {periods.map(periodNum => (
-                      <th key={periodNum} className="px-2 py-2 text-indigo-700 font-semibold">Period {periodNum}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {days.map((day, dayIdx) => (
-                    <tr key={day} className="border-b border-indigo-100">
-                      <td className="font-semibold px-2 py-2 text-indigo-700 bg-indigo-50">{day} <span className="text-xs text-indigo-400">({dayIdx + 1})</span></td>
+        <Card className="shadow-medium overflow-x-auto">
+          <div className="p-6">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b">
+                  <th className="px-2 py-1">Day</th>
+                  {periods.map(periodNum => (
+                    <th key={periodNum} className="px-2 py-1">Period {periodNum}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {days.map((day, dayIdx) => {
+                  // Find continuous blocks for each faculty for this day
+                  const facultyBlocks: Record<string, number[][]> = {};
+                  facultyList.forEach(faculty => {
+                    facultyBlocks[faculty] = getContinuousPeriods(timetable, day, faculty);
+                  });
+                  return (
+                    <tr key={day} className="border-b">
+                      <td className="font-semibold px-2 py-1">{day} <span className="text-xs text-muted-foreground">({dayIdx + 1})</span></td>
                       {periods.map(periodNum => {
                         const period = getPeriodData(day, periodNum);
+                        // Check if this period is the start of a continuous block for its faculty
+                        let blockLength = 1;
+                        let showAttendanceButton = false;
+                        if (period?.faculty) {
+                          const blocks = facultyBlocks[period.faculty] || [];
+                          for (const block of blocks) {
+                            if (block[0] === periodNum) {
+                              blockLength = block.length;
+                              showAttendanceButton = true;
+                              break;
+                            }
+                          }
+                        }
+                        // Highlight if this period is part of a continuous block for its faculty
+                        let highlightClass = "";
+                        if (period?.faculty) {
+                          const blocks = facultyBlocks[period.faculty] || [];
+                          for (const block of blocks) {
+                            if (block.includes(periodNum)) {
+                              highlightClass = "bg-yellow-100/60"; // Use a soft yellow highlight
+                              break;
+                            }
+                          }
+                        }
                         return (
-                          <td key={periodNum} className="px-2 py-2">
+                          <td key={periodNum} className={`px-2 py-1 ${highlightClass}`}>
                             {isEditing ? (
                               <div className="flex flex-col gap-1">
                                 <select
                                   value={period?.subject || ""}
                                   onChange={e => {
+                                    const subjName = e.target.value;
+                                    // Find the assigned faculty for this subject
+                                    const assignment = assignedSubjects.find(s => s.name === subjName);
                                     setTimetable(tt => tt.map(t =>
-                                      t.day === day && t.period === periodNum ? { ...t, subject: e.target.value } : t
+                                      t.day === day && t.period === periodNum
+                                        ? { ...t, subject: subjName, faculty: assignment ? assignment.faculty : "" }
+                                        : t
                                     ));
                                   }}
-                                  className="border-2 border-indigo-200 rounded px-1 py-0.5 focus:ring-2 focus:ring-indigo-400 text-xs"
-                                  style={{ maxWidth: 80, width: 80, minWidth: 0, maxHeight: 32 }}
+                                  className="border rounded px-1 py-0.5 mb-1"
                                 >
-                                  <option value="">Select</option>
-                                  {(classId && SUBJECTS_BY_CLASS[classId] ? SUBJECTS_BY_CLASS[classId] : DEFAULT_SUBJECTS).map(subj => (
-                                    <option key={subj} value={subj} className="truncate text-xs">{subj}</option>
+                                  <option value="">Select Subject</option>
+                                  {assignedSubjects.map(subj => (
+                                    <option key={subj.id} value={subj.name}>{subj.name} ({subj.courseCode})</option>
                                   ))}
                                 </select>
                               </div>
                             ) : (
                               <div>
-                                <div className="font-medium text-indigo-900">{period?.subject || <span className="text-indigo-300">Free</span>}</div>
-                                <div className="text-xs text-pink-500">{period?.faculty || ""}</div>
+                                <div className="font-medium">{period?.subject || <span className="text-muted-foreground">Free</span>}</div>
+                                <div className="text-xs text-muted-foreground">{period?.faculty || ""}</div>
                               </div>
                             )}
                           </td>
                         );
                       })}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         </Card>
       </main>

@@ -1,36 +1,183 @@
+import { supabase } from "@/integrations/supabase/client";
+// F1 car style name animation with lightning effect
+const F1NameLightning = ({ name }: { name?: string }) => {
+  const [animating, setAnimating] = useState(true);
+  const [style, setStyle] = useState<React.CSSProperties>({ transform: 'translateX(100vw)', filter: 'brightness(2) drop-shadow(0 0 8px #fff)' });
+  useEffect(() => {
+    let start = Date.now();
+    let raf: number;
+    const duration = 3000;
+    const animate = () => {
+      const elapsed = Date.now() - start;
+      if (elapsed < duration) {
+        // F1 car: fast to slow slide-in
+        const progress = elapsed / duration;
+        const ease = 1 - Math.pow(1 - progress, 2);
+        const x = 100 - 100 * ease; // from 100vw to 0
+        const glow = 2 - ease; // glow fades out
+        setStyle({
+          transform: `translateX(${x}vw)`,
+          transition: 'transform 0.05s linear',
+          filter: `brightness(${glow}) drop-shadow(0 0 ${8 * glow}px #fff)`,
+        });
+        raf = window.requestAnimationFrame(animate);
+      } else {
+        setStyle({
+          transform: 'translateX(0)',
+          transition: 'transform 0.5s cubic-bezier(0.22, 1, 0.36, 1)',
+          filter: 'brightness(1.2) drop-shadow(0 0 12px #00f8) drop-shadow(0 0 24px #fff)',
+        });
+        setAnimating(false);
+      }
+    };
+    animate();
+    return () => { if (raf) window.cancelAnimationFrame(raf); };
+  }, []);
+  return (
+    <h2
+      className="text-2xl sm:text-3xl font-bold tracking-tight relative"
+      style={style}
+    >
+      {name}
+      {animating && (
+        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-2 bg-gradient-to-r from-yellow-400 via-white to-blue-400 animate-pulse" style={{ zIndex: 1, filter: 'blur(2px)' }} />
+      )}
+    </h2>
+  );
+};
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LogOut, User, Book, ImagePlus } from "lucide-react";
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { LogOut, User, Megaphone, Vote, FileBarChart, MessageSquare, IdCard } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import React, { useEffect, useState, useRef } from "react";
+import MobileHeader from "@/components/MobileHeader";
+import StudentTabBar from "@/components/StudentTabBar";
+import { Dialog } from "@/components/ui/dialog";
+import { X } from "lucide-react";
+// Coin spinning animation for profile photo
+const ProfilePhotoSpin = ({ profileUrl, fullName }: { profileUrl?: string; fullName?: string }) => {
+  const imgRef = useRef<HTMLImageElement>(null);
+  const [spinning, setSpinning] = useState(true);
+  const [spinStyle, setSpinStyle] = useState<React.CSSProperties>({});
+
+    useEffect(() => {
+      let start = Date.now();
+      let raf: number;
+      const duration = 3000; // 3 seconds
+      const animate = () => {
+        const elapsed = Date.now() - start;
+        if (elapsed < duration) {
+          // Fast to slow: ease out
+          const progress = elapsed / duration;
+          const ease = 1 - Math.pow(1 - progress, 2);
+          const deg = 1080 * (1 - ease) + 360 * ease; // 3 spins to 1 spin
+          setSpinStyle({ transform: `rotateY(${deg}deg)`, transition: 'transform 0.05s linear' });
+          raf = window.requestAnimationFrame(animate);
+        } else {
+          setSpinStyle({ transform: 'rotateY(0deg)', transition: 'transform 0.5s cubic-bezier(0.22, 1, 0.36, 1)' });
+          setSpinning(false);
+        }
+      };
+      animate();
+      return () => { if (raf) window.cancelAnimationFrame(raf); };
+    }, []);
+
+    // If Supabase Storage, ensure public access or signed URL
+    const getImageSrc = () => {
+      if (!profileUrl) return '';
+      // If already a public URL, use as is
+      if (profileUrl.startsWith('http')) return profileUrl;
+      // If it's a Supabase Storage path, you may need to generate a public/signed URL here
+      // For now, fallback to direct usage
+      return profileUrl;
+    };
+    const src = getImageSrc();
+    const [imgError, setImgError] = useState(false);
+    return (
+      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-primary to-purple-500 shadow-lg flex items-center justify-center ring-2 ring-primary/20 overflow-hidden border-2 border-white" style={spinStyle}>
+        {src && !imgError ? (
+          <img
+            ref={imgRef}
+            src={src}
+            alt="profile"
+            className="w-full h-full object-cover"
+            onError={e => {
+              setImgError(true);
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName || 'Student')}`;
+            }}
+            style={{ aspectRatio: '1/1', background: 'white', backfaceVisibility: 'hidden' }}
+          />
+        ) : imgError ? (
+          <div className="flex flex-col items-center justify-center w-full h-full bg-red-100">
+            <User className="w-8 h-8 text-red-400" />
+            <span className="text-xs text-red-400">Image failed to load</span>
+            <span className="text-[10px] text-red-400 break-all">{src}</span>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center w-full h-full bg-slate-100">
+            <User className="w-8 h-8 text-slate-400" />
+            <span className="text-xs text-slate-400">No Photo</span>
+          </div>
+        )}
+      </div>
+    );
+  };
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const student = location.state?.student;
-  const [classInfo, setClassInfo] = useState<any>(null);
-  const [profileUrl, setProfileUrl] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [openProfile, setOpenProfile] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [student, setStudent] = useState<any>(() => {
+    try {
+      const str = sessionStorage.getItem("student");
+      return str ? JSON.parse(str) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [showAnnouncement, setShowAnnouncement] = useState(false);
+  const [announcement, setAnnouncement] = useState<any>(null);
+  const [classMap, setClassMap] = useState<{ [id: string]: string }>({});
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) {
-        navigate("/student-login");
+    // Always refresh student from Supabase on mount (by id in sessionStorage)
+    const fetchStudent = async () => {
+      try {
+        // If navigation brought a student, persist it
+        const navStudent: any = (location.state as any)?.student;
+        if (navStudent) {
+          try { sessionStorage.setItem('student', JSON.stringify(navStudent)); } catch {}
+          setStudent(navStudent);
+          return;
+        }
+        const str = sessionStorage.getItem("student");
+        const localStudent = str ? JSON.parse(str) : null;
+        if (localStudent?.id) {
+          const { data, error } = await supabase.from('students').select('*').eq('id', localStudent.id).single();
+          if (data) {
+            setStudent(data);
+            sessionStorage.setItem('student', JSON.stringify(data));
+          } else {
+            setStudent(localStudent); // fallback
+          }
+        } else {
+          setStudent(localStudent);
+        }
+      } catch {
+        setStudent(null);
       }
-    });
-  }, [navigate]);
+    };
+    fetchStudent();
+  }, [location.state]);
+  const [classInfo, setClassInfo] = useState<any>(null);
+
+  // No auth gating for students; rely on in-app login and sessionStorage
 
   useEffect(() => {
     if (!student) {
       navigate('/student-login');
       return;
     }
-    // Fetch class info
     const fetchClass = async () => {
       const { data } = await supabase
         .from('classes')
@@ -40,19 +187,64 @@ const StudentDashboard = () => {
       setClassInfo(data);
     };
     fetchClass();
-    // Fetch profile photo URL from student record
-    if (student.profile_url) {
-      setProfileUrl(student.profile_url);
-    } else {
-      // Optionally, fetch from DB if not in state
-      supabase.from('students').select('profile_url').eq('id', student.id).single().then(({ data }) => {
-        if (data?.profile_url) setProfileUrl(data.profile_url);
-      });
-    }
   }, [student, navigate]);
+
+  useEffect(() => {
+    // Fetch all classes for mapping
+    const fetchClasses = async () => {
+      const { data } = await supabase.from("classes").select("id, class_name");
+      if (data) {
+        const map: { [id: string]: string } = {};
+        data.forEach((c: any) => { map[c.id] = c.class_name; });
+        setClassMap(map);
+      }
+    };
+    fetchClasses();
+    // Fetch announcement for popup
+    const fetchAnnouncement = async () => {
+      const { data } = await (supabase as any)
+        .from("announcements")
+        .select("*")
+        .in("target", ["students", "both"])
+        .eq("show_in_start", true)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      if (data && data.length > 0) {
+        setAnnouncement(data[0]);
+        setShowAnnouncement(true);
+        // Auto-close after 5 seconds
+        setTimeout(() => setShowAnnouncement(false), 5000);
+      }
+    };
+    fetchAnnouncement();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
+      <MobileHeader title="Student Portal" />
+      {/* ...existing code... */}
+      {/* Announcement Popup */}
+      {showAnnouncement && announcement && (
+        <Dialog open={showAnnouncement} onOpenChange={setShowAnnouncement}>
+          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/30">
+            <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md relative">
+              <button className="absolute top-2 right-2" onClick={() => setShowAnnouncement(false)}>
+                <X className="w-5 h-5 text-muted-foreground" />
+              </button>
+              <h3 className="text-lg font-bold mb-2">Announcement</h3>
+              <div className="mb-2">{announcement.message}</div>
+              {announcement.image_url && (
+                <img src={announcement.image_url} alt="Announcement" className="max-h-40 rounded mb-2" />
+              )}
+              {announcement.classes && announcement.classes.length > 0 && (
+                <div className="text-xs text-muted-foreground mt-1">
+                  Classes: {announcement.classes.map((id: string) => classMap[id] || id).join(', ')}
+                </div>
+              )}
+            </div>
+          </div>
+        </Dialog>
+      )}
       {/* Header */}
       <header className="border-b bg-card shadow-soft">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -67,158 +259,60 @@ const StudentDashboard = () => {
           </div>
           <Button 
             variant="ghost" 
-            onClick={() => navigate("/login-selection")}
+            onClick={() => { try { sessionStorage.removeItem('student'); } catch {}; navigate("/login-selection"); }}
           >
             <LogOut className="w-4 h-4 mr-2" />
             Logout
           </Button>
         </div>
       </header>
-      <main className="container mx-auto px-4 py-8">
-        <div className="flex flex-col md:flex-row gap-6 items-center justify-center mt-6">
-          {/* Student Info & Profile - stacked for mobile, side-by-side for desktop */}
-          <div className="flex flex-col md:flex-row items-center gap-6 w-full md:w-auto">
-            {/* Profile with entry effect, no upload */}
-            <div className="w-28 h-28 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg animate-fade-in animate-coin-spin overflow-hidden">
-              {profileUrl ? (
-                <img
-                  src={profileUrl}
-                  alt="Profile"
-                  className="w-full h-full object-cover rounded-full animate-bounce-in"
-                />
-              ) : (
-                <User className="w-16 h-16 md:w-20 md:h-20 text-white drop-shadow-lg animate-bounce-in" />
-              )}
-            </div>
-            {/* Info with entry effect */}
-            <Card className="shadow-medium w-full md:w-80 animate-slide-in">
-              <div className="p-6 space-y-2">
-                <h2 className="text-2xl font-bold flex items-center gap-2">
-                  <User className="w-6 h-6 text-primary" />
-                  <span className="animate-fade-in">Student Information</span>
-                </h2>
-                <p className="text-sm text-muted-foreground">Name</p>
-                <p className="text-lg font-bold animate-name-f1 bg-gradient-to-r from-blue-700 via-blue-500 to-blue-400 bg-clip-text text-transparent">
-                  {student?.full_name}
-                </p>
-                <p className="text-sm text-muted-foreground">Roll Number</p>
-                <p className="text-lg font-semibold">{student?.roll_number}</p>
-                <p className="text-sm text-muted-foreground">Department</p>
-                <p className="text-lg font-semibold">{classInfo?.department || '-'}</p>
-              </div>
-            </Card>
-          </div>
-        </div>
 
-        {/* Six Buttons in 3x2 Grid, vibrant colors, responsive */}
-        <div className="mt-10 grid grid-cols-2 grid-rows-3 gap-4 w-full max-w-md mx-auto">
-          <Button size="lg" className="h-20 text-lg font-bold bg-gradient-to-br from-blue-500 to-blue-400 text-white shadow-lg hover:scale-105 transition-transform" onClick={() => navigate('/student-attendance', { state: { student } })}>
+  <main className="container mx-auto px-4 py-6 space-y-4 pb-20">
+        {/* Top: Info left, profile right */}
+        <Card className="shadow-medium p-4 sm:p-6">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex-1">
+              <p className="text-sm text-muted-foreground">Hello,</p>
+              <F1NameLightning name={student?.full_name} />
+              <div className="mt-2 grid grid-cols-2 gap-2 text-sm sm:text-base">
+                <div>
+                  <p className="text-muted-foreground">Roll No</p>
+                  <p className="font-semibold">{student?.roll_number}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Department</p>
+                  <p className="font-semibold">{classInfo?.department || '-'}</p>
+                </div>
+              </div>
+            </div>
+            <ProfilePhotoSpin profileUrl={student?.profile_url} fullName={student?.full_name} />
+
+          </div>
+        </Card>
+
+        {/* 3x2 grid buttons */}
+        <div className="grid grid-cols-2 gap-3 sm:gap-4">
+          <Button className="h-24 sm:h-28 rounded-xl bg-primary text-primary-foreground hover:opacity-90 shadow-md" onClick={() => navigate('/student/attendance', { state: { student } })}>
             Attendance
           </Button>
-          <Button size="lg" className="h-20 text-lg font-bold bg-gradient-to-br from-pink-500 to-pink-400 text-white shadow-lg hover:scale-105 transition-transform" disabled>
+          <Button className="h-24 sm:h-28 rounded-xl bg-emerald-600 text-white hover:opacity-90 shadow-md" onClick={() => navigate('/student/announcements')}>
             Announcements
           </Button>
-          <Button size="lg" className="h-20 text-lg font-bold bg-gradient-to-br from-green-500 to-green-400 text-white shadow-lg hover:scale-105 transition-transform" disabled>
+          <Button className="h-24 sm:h-28 rounded-xl bg-amber-500 text-black hover:opacity-90 shadow-md" onClick={() => navigate('/student/votings')}>
             Class Votings
           </Button>
-          <Button size="lg" className="h-20 text-lg font-bold bg-gradient-to-br from-yellow-500 to-yellow-400 text-white shadow-lg hover:scale-105 transition-transform" disabled>
+          <Button className="h-24 sm:h-28 rounded-xl bg-indigo-600 text-white hover:opacity-90 shadow-md" onClick={() => navigate('/student/results', { state: { student } })}>
             Results
           </Button>
-          <Button size="lg" className="h-20 text-lg font-bold bg-gradient-to-br from-purple-500 to-purple-400 text-white shadow-lg hover:scale-105 transition-transform" disabled>
+          <Button className="h-24 sm:h-28 rounded-xl bg-rose-500 text-white hover:opacity-90 shadow-md" onClick={() => navigate('/student/feedback')}>
             Feedback
           </Button>
-          <Dialog open={openProfile} onOpenChange={setOpenProfile}>
-            <DialogTrigger asChild>
-              <Button size="lg" className="h-20 text-lg font-bold bg-gradient-to-br from-gray-700 to-gray-500 text-white shadow-lg hover:scale-105 transition-transform">
-                Profile
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Edit Profile Photo</DialogTitle>
-              </DialogHeader>
-              <div className="flex flex-col items-center gap-4">
-                <div className="w-32 h-32 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg overflow-hidden">
-                  {previewUrl ? (
-                    <img src={previewUrl} alt="Preview" className="w-full h-full object-cover rounded-full" />
-                  ) : profileUrl ? (
-                    <img src={profileUrl} alt="Profile" className="w-full h-full object-cover rounded-full" />
-                  ) : (
-                    <User className="w-20 h-20 text-white" />
-                  )}
-                </div>
-                <label className="mt-2 flex flex-col items-center gap-2 cursor-pointer">
-                  <span className="text-sm font-medium text-primary flex items-center gap-1"><ImagePlus className="w-5 h-5" /> Choose Photo</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    disabled={uploading}
-                    onChange={e => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      setSelectedFile(file);
-                      setPreviewUrl(URL.createObjectURL(file));
-                    }}
-                  />
-                </label>
-                {uploading && <div className="text-xs text-muted-foreground">Uploading...</div>}
-              </div>
-              <DialogFooter>
-                <Button
-                  disabled={!selectedFile || uploading}
-                  onClick={async () => {
-                    if (!selectedFile || !student) return;
-                    setUploading(true);
-                    // Upload to Supabase Storage (bucket: profile-photos)
-                    const fileExt = selectedFile.name.split('.').pop();
-                    const fileName = `${student.id}.${fileExt}`;
-                    const { data, error } = await supabase.storage.from('profile-photos').upload(fileName, selectedFile, { upsert: true });
-                    if (error) {
-                      alert('Upload failed');
-                      setUploading(false);
-                      return;
-                    }
-                    // Get public URL
-                    const { data: urlData } = supabase.storage.from('profile-photos').getPublicUrl(fileName);
-                    if (urlData?.publicUrl) {
-                      setProfileUrl(urlData.publicUrl);
-                      setPreviewUrl(null);
-                      setSelectedFile(null);
-                      // Update student record
-                      await supabase.from('students').update({ profile_url: urlData.publicUrl }).eq('id', student.id);
-                    }
-                    setUploading(false);
-                    setOpenProfile(false);
-                  }}
-                >
-                  Save Photo
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <Button className="h-24 sm:h-28 rounded-xl bg-slate-700 text-white hover:opacity-90 shadow-md" onClick={() => navigate('/student/profile')}>
+            Profile
+          </Button>
         </div>
-
-        {/* Animations CSS */}
-        <style>{`
-          @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-          @keyframes slide-in { from { transform: translateY(30px); opacity: 0; } to { transform: none; opacity: 1; } }
-          @keyframes bounce-in { 0% { transform: scale(0.7); } 60% { transform: scale(1.1); } 100% { transform: scale(1); } }
-          @keyframes coin-spin { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }
-          @keyframes name-f1 {
-            0% { opacity: 0; transform: translateX(120%) skewX(-30deg) scaleX(1.2); filter: blur(6px); }
-            60% { opacity: 1; filter: blur(0px); }
-            80% { transform: translateX(-2%) skewX(2deg) scaleX(1.05); }
-            100% { opacity: 1; transform: none; filter: none; }
-          }
-          .animate-fade-in { animation: fade-in 0.8s ease; }
-          .animate-fade-in-delay { animation: fade-in 1.2s ease; }
-          .animate-slide-in { animation: slide-in 0.7s cubic-bezier(.42,0,.58,1); }
-          .animate-bounce-in { animation: bounce-in 0.7s cubic-bezier(.42,0,.58,1); }
-          .animate-coin-spin { animation: coin-spin 3s cubic-bezier(.42,0,.58,1); }
-          .animate-name-f1 { animation: name-f1 0.85s cubic-bezier(.8,0,.2,1); }
-        `}</style>
       </main>
+      <StudentTabBar />
     </div>
   );
 };

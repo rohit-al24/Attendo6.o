@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Password Reset</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <img src="https://attendokrct3o.github.io/assets/attendo-logo.png" alt="Attendo Logo" style="width:60px; margin-bottom:1rem;" />
+      <h2>Set a New Password</h2>
+      <p style="color:#475569; margin-bottom:1.5rem;">For your security, please choose a strong password you haven't used before.<br>Welcome back to <b>Zynix Attendo</b>!</p>
+      <form id="resetForm">
+        <label for="password">New Password</label>
+        <input type="password" id="password" placeholder="Create a new password" required />
+        <label for="confirm">Confirm New Password</label>
+        <input type="password" id="confirm" placeholder="Re-enter your new password" required />
+        <button type="submit">Update Password</button>
+      </form>
+      <div id="message"></div>
+    </div>
+  </div>
+  <script src="reset.js"></script>
+</body>
+</html>

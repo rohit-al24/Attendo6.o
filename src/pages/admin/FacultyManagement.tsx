@@ -4,8 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, UserPlus, Edit, Trash2, Calendar, FileText } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { UserPlus, Edit, Trash2, Calendar, FileText } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -23,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import MobileHeader from "@/components/MobileHeader";
 
 interface Faculty {
   id: string;
@@ -34,7 +34,6 @@ interface Faculty {
 }
 
 const FacultyManagement = () => {
-  const navigate = useNavigate();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newFaculty, setNewFaculty] = useState({ name: "", email: "", department: "", password: "" });
   // Faculty data from DB
@@ -201,27 +200,39 @@ const FacultyManagement = () => {
     setActivitiesLoading(false);
   };
 
-  const handleCreateFaculty = () => {
-    if (!newFaculty.name || !newFaculty.email || !newFaculty.department || !newFaculty.password) {
-      toast.error("Please fill all fields");
+const handleCreateFaculty = async () => {
+  if (!newFaculty.name || !newFaculty.email || !newFaculty.department || !newFaculty.password) {
+    toast.error("Please fill all fields");
+    return;
+  }
+  try {
+    const res = await fetch("https://gczoakupibhzaeplstzh.supabase.co/functions/v1/create-faculty-account", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: newFaculty.name,
+        email: newFaculty.email,
+        department: newFaculty.department,
+        password: newFaculty.password,
+      }),
+    });
+    const result = await res.json();
+    if (result.error) {
+      toast.error("Error: " + result.error);
       return;
     }
-    
     toast.success("Faculty account created successfully!");
     setIsCreateDialogOpen(false);
     setNewFaculty({ name: "", email: "", department: "", password: "" });
-  };
+    // Optionally refresh faculty list
+  } catch (err) {
+    toast.error("Unexpected error: " + (err as any).message);
+  }
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
-      <header className="border-b bg-card shadow-soft">
-        <div className="container mx-auto px-4 py-4">
-          <Button variant="ghost" onClick={() => navigate("/admin-dashboard")}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Dashboard
-          </Button>
-        </div>
-      </header>
+      <MobileHeader title="Faculty Management" />
 
       <main className="container mx-auto px-4 py-8 space-y-6">
         <div className="flex items-center justify-between">
@@ -363,6 +374,31 @@ const FacultyManagement = () => {
                             <Edit className="w-4 h-4 mr-2" />
                             Edit
                           </Button>
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button variant="outline" size="sm">
+                                <FileText className="w-4 h-4 mr-2" />
+                                Reset Password
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Send Password Reset Link</DialogTitle>
+                                <DialogDescription>Send a password reset email to {faculty.email}?</DialogDescription>
+                              </DialogHeader>
+                              <Button className="w-full" onClick={async () => {
+                                try {
+                                  const { error } = await supabase.auth.resetPasswordForEmail(faculty.email);
+                                  if (error) toast.error("Error sending reset link: " + error.message);
+                                  else toast.success("Password reset link sent to " + faculty.email);
+                                } catch (err) {
+                                  toast.error("Unexpected error: " + (err as any).message);
+                                }
+                              }}>
+                                Send Reset Link
+                              </Button>
+                            </DialogContent>
+                          </Dialog>
                         </div>
                       </div>
                     </Card>

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Users } from "lucide-react";
+import MobileHeader from "@/components/MobileHeader";
 import { toast } from "sonner";
 
 const FacultyLogin = () => {
@@ -56,8 +57,10 @@ const FacultyLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md shadow-large animate-in fade-in slide-in-from-bottom duration-500">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 flex flex-col p-0">
+      <MobileHeader title="Faculty Login" />
+      <div className="flex-1 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md shadow-large animate-in fade-in slide-in-from-bottom duration-500">
         <div className="p-8 space-y-6">
           {/* Header */}
           <div className="text-center space-y-4">
@@ -118,7 +121,8 @@ const FacultyLogin = () => {
             Back to Login Selection
           </Button>
         </div>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 };
