@@ -32,18 +32,22 @@ const LoginSelection = () => {
   ];
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gradient-to-b from-[#181c2a] via-[#23284a] to-[#0a0d15] px-4 py-8">
-      <MobileHeader title="Login" />
+    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gradient-to-b from-sky-300 via-sky-100 to-white px-4 py-8">
+  
       {/* Logos at top */}
       <div className="flex flex-col items-center mb-10 mt-2">
-  <div className="flex flex-row items-center justify-center gap-10 mb-6 pt-2">
-          <div className="logo-drop-left p-2 rounded-2xl bg-gradient-to-br from-cyan-400/30 to-white/5 shadow-2xl border-4 border-cyan-400/70 transition-transform duration-300 hover:scale-110 hover:shadow-cyan-400/40">
-            <img src={attendoLogo} alt="Attendo" className="w-24 h-24 rounded-2xl bg-white/10" />
-          </div>
-          <div className="logo-drop-right p-2 rounded-2xl bg-gradient-to-br from-indigo-400/30 to-white/5 shadow-2xl border-4 border-indigo-400/70 transition-transform duration-300 hover:scale-110 hover:shadow-indigo-400/40">
-            <img src={orgLogo} alt="Org Logo" className="w-24 h-24 rounded-2xl bg-white/10" />
+      <div className="flex flex-row items-center justify-center gap-8 mb-4 pt-1">
+        <div className="logo-drop-left rounded-full transition-transform duration-300 hover:scale-110 flex items-center justify-center">
+          <div className="w-20 h-20 rounded-full bg-white shadow-2xl border-4 border-cyan-200/60 flex items-center justify-center overflow-hidden">
+        <img src={attendoLogo} alt="Attendo" className="w-14 h-14 rounded-full object-contain" />
           </div>
         </div>
+        <div className="logo-drop-right rounded-full transition-transform duration-300 hover:scale-110 flex items-center justify-center">
+          <div className="w-20 h-20 rounded-full bg-white shadow-2xl border-4 border-indigo-200/60 flex items-center justify-center overflow-hidden">
+        <img src={orgLogo} alt="Org Logo" className="w-14 h-14 rounded-full object-contain" />
+          </div>
+        </div>
+      </div>
         <style>{`
           .logo-drop-left {
             animation: logoDropLeft 1.2s cubic-bezier(.6,1.6,.4,1) 0s both, logoBounceLive 2.8s cubic-bezier(.4,0,.2,1) 1.2s infinite alternate;
@@ -100,16 +104,16 @@ const LoginSelection = () => {
         `}</style>
   <>
     <h1
-      className="text-3xl md:text-4xl font-extrabold tracking-tight mt-2 text-white drop-shadow-lg"
+      className="text-3xl md:text-4xl font-extrabold tracking-tight mt-2 text-blue-900 drop-shadow-lg"
       style={{ animation: "fadeInUp 0.7s cubic-bezier(.4,0,.2,1) both" }}
     >
       Welcome to{" "}
-      <span className="bg-gradient-to-r from-cyan-300 via-sky-300 to-indigo-400 bg-clip-text text-transparent">
+      <span className="bg-gradient-to-r from-[#186aed] to-[#dea9d7]  bg-clip-text text-transparent">
         Attendo
       </span>
     </h1>
     <p
-      className="text-sm md:text-base text-white/70 mt-2"
+      className="text-sm md:text-base text-black/70 mt-2"
       style={{ animation: "fadeInUp 0.7s cubic-bezier(.4,0,.2,1) both", animationDelay: "80ms" }}
     >
       Choose your role to continue
@@ -120,48 +124,30 @@ const LoginSelection = () => {
     />
   </>
       </div>
-      {/* Login Options - mobile-first pill buttons */}
+      {/* Login Options - vertical list, rectangle buttons */}
       <div className="flex flex-col items-center w-full max-w-sm mx-auto">
-        <div className="flex flex-row justify-center gap-12 mb-8">
-          {loginOptions.slice(0,2).map((option, index) => (
-            <button
-              key={option.title}
-              onClick={() => navigate(option.path)}
-              className={
-                `flex flex-col items-center justify-center w-48 h-28 rounded-[2.8rem] bg-gradient-to-br from-cyan-400/90 to-indigo-600/90 shadow-2xl border-2 border-cyan-300/40 focus:outline-none active:scale-97 transition-all duration-200 hover:scale-102 relative overflow-hidden`
-              }
-              style={{ animation: `fadeInUp 0.7s cubic-bezier(.4,0,.2,1) both`, animationDelay: `${index * 120}ms` }}
-            >
-              <span className="flex items-center justify-center w-16 h-16 rounded-full bg-white/10 shadow-lg mb-2">
-                <option.icon className="w-10 h-10 text-white drop-shadow-lg" />
-              </span>
-              <span className="text-xl font-bold text-white tracking-wide drop-shadow-md">
-                {option.title.replace(' Login', '')}
-              </span>
-              {/* Ripple effect */}
-              <span className="absolute inset-0 pointer-events-none" style={{zIndex:0}} />
-            </button>
+        <ul className="w-full flex flex-col gap-6 mt-2">
+          {loginOptions.map((option, index) => (
+            <li key={option.title} className="w-full">
+              <button
+                onClick={() => navigate(option.path)}
+                className={
+                  `flex flex-row items-center w-full h-20 rounded-xl bg-gradient-to-br from-cyan-400/90 to-indigo-600/90 shadow-xl border border-cyan-300/40 focus:outline-none active:scale-97 transition-all duration-200 hover:scale-102 relative overflow-hidden px-6`
+                }
+                style={{ animation: `fadeInUp 0.7s cubic-bezier(.4,0,.2,1) both`, animationDelay: `${index * 120}ms` }}
+              >
+                <span className="flex items-center justify-center w-12 h-12 rounded-lg bg-white/10 shadow-lg mr-5">
+                  {React.createElement(option.icon, { className: "w-8 h-8 text-white drop-shadow-lg" })}
+                </span>
+                <span className="text-lg font-bold text-white tracking-wide drop-shadow-md">
+                  {option.title.replace(' Login', '')}
+                </span>
+                {/* Ripple effect */}
+                <span className="absolute inset-0 pointer-events-none" style={{zIndex:0}} />
+              </button>
+            </li>
           ))}
-        </div>
-        <div className="flex flex-row justify-center">
-          <button
-            key={loginOptions[2].title}
-            onClick={() => navigate(loginOptions[2].path)}
-            className={
-              `flex flex-col items-center justify-center w-48 h-28 rounded-[2.8rem] bg-gradient-to-br from-cyan-400/90 to-indigo-600/90 shadow-2xl border-2 border-cyan-300/40 focus:outline-none active:scale-97 transition-all duration-200 hover:scale-102 relative overflow-hidden`
-            }
-            style={{ animation: `fadeInUp 0.7s cubic-bezier(.4,0,.2,1) both`, animationDelay: `240ms` }}
-          >
-            <span className="flex items-center justify-center w-16 h-16 rounded-full bg-white/10 shadow-lg mb-2">
-              {React.createElement(loginOptions[2].icon, { className: "w-10 h-10 text-white drop-shadow-lg" })}
-            </span>
-            <span className="text-xl font-bold text-white tracking-wide drop-shadow-md">
-              {loginOptions[2].title.replace(' Login', '')}
-            </span>
-            {/* Ripple effect */}
-            <span className="absolute inset-0 pointer-events-none" style={{zIndex:0}} />
-          </button>
-        </div>
+        </ul>
       </div>
       <style>{`
         @keyframes fadeInUp {

@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Attendo • Create Faculty Account</title>
+  <link rel="stylesheet" href="./style.css" />
+  <meta name="robots" content="noindex" />
+</head>
+<body>
+  <main class="wrap">
+    <section class="card">
+      <header class="brand">Attendo</header>
+  <h1>Finishing your account</h1>
+  <p class="muted hidden" id="status">Checking your invitation…</p>
+      <details style="margin:8px 0">
+        <summary>Diagnostics</summary>
+        <pre id="diag" style="white-space:pre-wrap; background:#0b1220; color:#9bb4ff; padding:8px; border-radius:8px; max-height:220px; overflow:auto">Loading…</pre>
+      </details>
+      <div id="error-panel" class="hidden">
+        <p class="muted" id="error-text">The link seems invalid or expired.</p>
+        <div class="gap" style="height:8px"></div>
+        <label class="label">Send a new link to your email</label>
+        <input id="recovery-email" class="input" type="email" placeholder="you@example.com" />
+        <button id="send-recovery" class="btn">Send new link</button>
+      </div>
+      <div id="password-panel">
+        <label class="label">Set a new password</label>
+        <input id="password" class="input" type="password" placeholder="Enter a strong password" />
+        <button id="set-password" class="btn">Save password</button>
+      </div>
+      <div id="profile-panel">
+        <label class="label">Full name</label>
+        <input id="full-name" class="input" type="text" placeholder="Your full name" />
+        <label class="label">Department</label>
+        <input id="department" class="input" type="text" placeholder="e.g., Computer Science" />
+        <button id="create-account" class="btn">Create account</button>
+      </div>
+      <div id="continue-panel" class="hidden">
+        <a id="go-dashboard" class="btn primary" href="#">Continue to dashboard</a>
+      </div>
+      <p class="hint">If this page doesn’t load, open the link from your invite email again.</p>
+    </section>
+  </main>
+
+  <!-- Supabase JS (UMD) -->
+  <!-- Note: remove integrity to avoid SRI mismatches if CDN content updates -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.3/dist/umd/supabase.js" crossorigin="anonymous"></script>
+
+  <script>
+    // IMPORTANT: Fill these with your project's values;
+    // It's safe to expose the anon key on public pages.
+    const SUPABASE_URL = "https://gczoakupibhzaeplstzh.supabase.co"; // <- replace if needed
+    const SUPABASE_ANON_KEY = "77e109c332d0905a93436f206f9fb97fdf22f871b574d01bd90f84a7df01b1ac"; // optionally replace with literal anon key if not using a bundler
+
+    // Fallback: if not replaced by a bundler, prompt once (dev only)
+    const effectiveAnon = SUPABASE_ANON_KEY.includes('VITE_SUPABASE_ANON_KEY') ? '' : SUPABASE_ANON_KEY;
+    const client = window.supabase.createClient(SUPABASE_URL, effectiveAnon || undefined);
+
+    const qs = new URLSearchParams(window.location.search);
+    const hash = new URLSearchParams((window.location.hash || '').replace(/^#/, ''));
+
+    function parseJwt(token) {
+      try {
+        const base = token.split('.')[1];
+        const norm = base.replace(/-/g, '+').replace(/_/g, '/');
+        const json = decodeURIComponent(atob(norm).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+        return JSON.parse(json);
+      } catch { return null; }
+    }
+
+  const statusEl = document.getElementById('status');
+  // Always show status
+  statusEl.classList.remove('hidden');
+    const passwordPanel = document.getElementById('password-panel');
+  const continuePanel = document.getElementById('continue-panel');
+  const profilePanel = document.getElementById('profile-panel');
+  const inpFullName = document.getElementById('full-name');
+  const inpDepartment = document.getElementById('department');
+  const btnCreate = document.getElementById('create-account');
+    const btnSetPassword = document.getElementById('set-password');
+    const inpPassword = document.getElementById('password');
+    const goDash = document.getElementById('go-dashboard');
+    const errorPanel = document.getElementById('error-panel');
+    const errorText = document.getElementById('error-text');
+    const recoveryEmail = document.getElementById('recovery-email');
+    const sendRecovery = document.getElementById('send-recovery');
+
+  const DASHBOARD_URL = 'https://attendo6.netlify.app/'; // adjust if your dashboard lives elsewhere
+  let sessionReady = false;
+  const diagEl = document.getElementById('diag');
+
+  function updateDiag(extra) {
+    (async () => {
+      try {
+        const sess = await client.auth.getSession();
+        const usr = await client.auth.getUser();
+        const info = {
+          now: new Date().toISOString(),
+          sessionReady,
+          supabaseUrl: SUPABASE_URL,
+          hasAccessToken: !!hash.get('access_token'),
+          hasRefreshToken: !!hash.get('refresh_token'),
+          hasCode: !!qs.get('code'),
+          sessionPresent: !!sess.data?.session,
+          userId: usr.data?.user?.id || null,
+          userEmail: usr.data?.user?.email || null,
+          error: extra?.error || null,
+          note: extra?.note || null
+        };
+        diagEl.textContent = JSON.stringify(info, null, 2);
+      } catch (e) {
+        diagEl.textContent = 'Diag error: ' + (e?.message || String(e));
+      }
+    })();
+  }
+
+    async function finalizeSession() {
+      try {
+        // If Supabase returned an error via hash, show recovery UI
+        const err = hash.get('error');
+        const codeName = hash.get('error_code');
+        const desc = hash.get('error_description');
+        if (err) {
+          errorPanel.classList.remove('hidden');
+          errorText.textContent = (desc || err).replaceAll('+',' ');
+          // We still continue to check for tokens in case the link carried them
+        }
+        // New (code) flow
+        const code = qs.get('code');
+        if (code) {
+          const { error } = await client.auth.exchangeCodeForSession(code);
+          if (error) throw error;
+          sessionReady = true; return true;
+        }
+        // Hash token flow
+        const access_token = hash.get('access_token');
+        const refresh_token = hash.get('refresh_token');
+        if (access_token && refresh_token) {
+          const payload = parseJwt(access_token);
+          const iss = payload?.iss || payload?.iss_url || null;
+          const aud = payload?.aud || null;
+          if (iss) { updateDiag({ note: `Token iss: ${iss}, aud: ${aud || 'n/a'}` }); }
+          const { error } = await client.auth.setSession({ access_token, refresh_token });
+          if (error) { updateDiag({ error }); throw error; }
+          sessionReady = true; return true;
+        }
+        // Check existing session
+        const { data } = await client.auth.getSession();
+        sessionReady = !!data.session; return sessionReady;
+      } catch (e) {
+        console.error(e);
+        statusEl.textContent = e.message || 'Could not complete sign-in';
+        updateDiag({ error: e?.message || String(e) });
+        return false;
+      }
+    }
+
+    async function maybeShowPasswordForm() {
+      // If this is the direct invite flow, the session is valid but password may not be set.
+      // Supabase allows updating password when logged in.
+      const { data } = await client.auth.getUser();
+      if (data?.user) {
+        // Show a password field if the user was invited (heuristic: no password set yet is not exposed).
+        // We provide the option to set/replace password anyway.
+        passwordPanel.classList.remove('hidden');
+        profilePanel.classList.remove('hidden');
+      }
+    }
+
+    btnSetPassword.addEventListener('click', async () => {
+      if (!sessionReady) {
+        const ok = await finalizeSession();
+        if (!ok) { alert('Your session is not ready. Please open the invite link again.'); return; }
+      }
+      const pwd = inpPassword.value.trim();
+      if (pwd.length < 8) { alert('Use at least 8 characters.'); return; }
+      statusEl.textContent = 'Saving password…';
+      const { error } = await client.auth.updateUser({ password: pwd });
+      if (error) { alert(error.message); statusEl.textContent = 'Error saving password'; return; }
+      statusEl.textContent = 'Password set. You can continue.';
+      continuePanel.classList.remove('hidden');
+    });
+
+    btnCreate.addEventListener('click', async () => {
+      if (!sessionReady) {
+        const ok = await finalizeSession();
+        if (!ok) { alert('Your session is not ready. Please open the invite link again.'); return; }
+      }
+      const fullName = inpFullName.value.trim();
+      const dept = inpDepartment.value.trim();
+      if (!fullName || !dept) { alert('Please enter full name and department'); return; }
+      statusEl.textContent = 'Creating your account…';
+      const { data: userData, error: userErr } = await client.auth.getUser();
+      if (userErr || !userData?.user) { alert('No active session. Open the invite link again.'); return; }
+      const { error } = await client.rpc('faculty_self_register', { p_full_name: fullName, p_department: dept });
+      if (error) {
+        console.error('RPC error', error);
+        statusEl.textContent = 'Error creating account';
+        updateDiag({ error });
+        alert([error.message, error.details, error.hint, error.code].filter(Boolean).join('\n'));
+        return;
+      }
+      // Verify row exists (best-effort; may be blocked by RLS policies)
+      try {
+        const { data: check } = await client.from('faculty').select('user_id').eq('user_id', userData.user.id).maybeSingle();
+        if (check?.user_id) {
+          statusEl.textContent = 'Account is ready.';
+        } else {
+          statusEl.textContent = 'Account created. If you do not see access, please contact admin.';
+        }
+      } catch { statusEl.textContent = 'Account is ready.'; }
+      continuePanel.classList.remove('hidden');
+    });
+
+    sendRecovery.addEventListener('click', async () => {
+      const email = (recoveryEmail.value || '').trim();
+      if (!email) { alert('Enter your email'); return; }
+      statusEl.textContent = 'Sending a new link…';
+      const redirectTo = window.location.origin + window.location.pathname; // come back here
+      const { error } = await client.auth.resetPasswordForEmail(email, { redirectTo });
+      if (error) { alert(error.message); statusEl.textContent = 'Could not send the link'; return; }
+      statusEl.textContent = 'A new link has been sent if the email exists.';
+    });
+
+    goDash.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.location.href = DASHBOARD_URL;
+    });
+
+    (async () => {
+      statusEl.textContent = 'Finalizing…';
+      const ok = await finalizeSession();
+      if (ok) {
+        statusEl.textContent = 'Signed in. You may set a new password or continue.';
+        continuePanel.classList.remove('hidden');
+        await maybeShowPasswordForm();
+        updateDiag({ note: 'Session finalized' });
+      } else {
+        statusEl.textContent = 'Could not finalize session. Please use the invite link again.';
+        updateDiag({ note: 'Session not finalized' });
+      }
+    })();
+
+    // Global error traps to surface issues when nothing seems to happen
+    window.addEventListener('error', (e) => {
+      const msg = e?.error?.message || e?.message || String(e);
+      statusEl.textContent = 'Error: ' + msg;
+      updateDiag({ error: msg });
+    });
+    window.addEventListener('unhandledrejection', (e) => {
+      const msg = e?.reason?.message || e?.reason || String(e);
+      statusEl.textContent = 'Error: ' + msg;
+      updateDiag({ error: msg });
+    });
+  </script>
+</body>
+</html>

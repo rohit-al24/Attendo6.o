@@ -20,7 +20,7 @@ const FacultyDashboard = () => {
 
   const [facultyData, setFacultyData] = useState<any>(null);
   const [todayClasses, setTodayClasses] = useState<any[]>([]);
-  const [attendanceDialog, setAttendanceDialog] = useState<{ open: boolean; periods: number[]; className: string; subject: string } | null>(null);
+  const [attendanceDialog, setAttendanceDialog] = useState<{ open: boolean; periods: number[]; className: string; subject: string; classId?: string } | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
@@ -109,8 +109,9 @@ const FacultyDashboard = () => {
           const block = blocks.find(b => b.includes(item.period_number) && b.length > 1);
           return {
             period: item.period_number,
-            time: "", // Optionally format time from item.time
-            class: className,
+            time: item.time || "",
+            className: className,
+            classId: item.class_id || '',
             subject: item.subject,
             block: block || null
           };
@@ -170,7 +171,7 @@ const FacultyDashboard = () => {
                         <div className="space-y-1">
                           <p className="font-semibold text-lg">Period {classItem.period}</p>
                           <p className="text-sm text-muted-foreground">{classItem.time}</p>
-                          <p className="text-sm"><span className="font-medium">Class:</span> {classItem.class}</p>
+                          <p className="text-sm"><span className="font-medium">Class:</span> {classItem.className}</p>
                           <p className="text-sm"><span className="font-medium">Subject:</span> {classItem.subject}</p>
                         </div>
                         <Button 
@@ -180,12 +181,13 @@ const FacultyDashboard = () => {
                               setAttendanceDialog({
                                 open: true,
                                 periods: classItem.block,
-                                className: classItem.class,
-                                subject: classItem.subject
+                                className: classItem.className,
+                                subject: classItem.subject,
+                                classId: classItem.classId
                               });
                             } else {
                               // Single period, go directly
-                              navigate("/faculty/attendance-marking");
+                              navigate("/faculty/attendance-marking", { state: { classId: classItem.classId, subject: classItem.subject, period: classItem.period, time: classItem.time } });
                             }
                           }}
                         >
@@ -212,13 +214,16 @@ const FacultyDashboard = () => {
             </div>
             <DialogFooter>
               <Button className="gradient-primary" onClick={() => {
-                // TODO: Mark attendance for all periods
+                // Navigate to attendance-marking with periods in query and pass classId/subject/time via state
+                const periodsQuery = attendanceDialog.periods.join(",");
+                const path = `/faculty/attendance-marking?periods=${periodsQuery}`;
                 setAttendanceDialog(null);
-                navigate("/faculty/attendance-marking?periods=" + attendanceDialog.periods.join(","));
+                navigate(path, { state: { classId: attendanceDialog.classId || '', subject: attendanceDialog.subject || '', time: '' } });
               }}>Yes, mark for all</Button>
               <Button variant="outline" onClick={() => {
+                const path = `/faculty/attendance-marking?periods=${attendanceDialog.periods[0]}`;
                 setAttendanceDialog(null);
-                navigate("/faculty/attendance-marking?periods=" + attendanceDialog.periods[0]);
+                navigate(path, { state: { classId: attendanceDialog.classId || '', subject: attendanceDialog.subject || '', period: attendanceDialog.periods[0], time: '' } });
               }}>No, only this period</Button>
             </DialogFooter>
           </DialogContent>

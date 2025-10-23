@@ -440,9 +440,12 @@ if (navigator.share && navigator.canShare && navigator.canShare({ files: [new Fi
       }
 
       Object.values(stats).forEach((s) => {
-        s.overall.percentage = s.overall.total ? (s.overall.present / s.overall.total) * 100 : 0;
+        // For percentage only, treat Present + OnDuty as present. Keep raw counts unchanged.
+        const effectiveOverallPresent = s.overall.present + s.overall.onduty;
+        s.overall.percentage = s.overall.total ? (effectiveOverallPresent / s.overall.total) * 100 : 0;
         Object.values(s.facultyWise).forEach((fw) => {
-          fw.percentage = fw.total ? (fw.present / fw.total) * 100 : 0;
+          const effectiveFwPresent = fw.present + fw.onduty;
+          fw.percentage = fw.total ? (effectiveFwPresent / fw.total) * 100 : 0;
         });
       });
 

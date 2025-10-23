@@ -1,0 +1,75 @@
+<!--
+  Supabase Auth: Invite User Email Template
+  Paste this into Supabase → Authentication → Templates → Invite user
+  Available variable: {{ .ConfirmationURL }}
+  Notes:
+  - Uses a light card for maximum readability across dark-mode email clients
+  - Inline styles + table layout for wide client support
+-->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>You're invited to Attendo</title>
+    <style>
+      /* Clients that support <style> will use these; all critical styles are also inlined */
+      @media (max-width: 620px){ .container{ width:100% !important; } .px{ padding-left:20px !important; padding-right:20px !important; } }
+    </style>
+  </head>
+  <body style="margin:0; padding:0; background:#f4f6fb; -webkit-font-smoothing:antialiased;">
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background:#f4f6fb;">
+      <tr>
+        <td align="center" style="padding:32px 12px;">
+          <table role="presentation" class="container" cellspacing="0" cellpadding="0" border="0" width="600" style="width:600px; max-width:600px; background:#ffffff; border-radius:14px; border:1px solid #e6e9f2; box-shadow:0 6px 28px rgba(20,32,54,0.08);">
+            <tr>
+              <td class="px" style="padding:28px 32px 0 32px;">
+                <!-- Brand row with embedded SVG logo -->
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                  <tr>
+                    <td align="center" style="padding-bottom:12px;">
+                      <!-- Centered logo above heading -->
+                      <img alt="Attendo" width="80" height="80" style="display:block; margin:0 auto; border-radius:12px; box-shadow:0 2px 8px rgba(14,165,163,0.12); border:2px solid #e0f7fa;" src="https://github.com/attendokrct3o/passwordreset/blob/main/attendo%20black%20transp.png?raw=true" />
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td class="px" style="padding:18px 32px 0 32px; font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif; color:#0b1220;">
+                <h1 style="margin:0 0 8px; font-size:24px; line-height:1.3; letter-spacing:-0.01em; color:#1f3b7b; text-align:center;">You're invited to Attendo</h1>
+                <div style="margin:0 0 10px; padding:10px 0; background:linear-gradient(90deg,#e0f7fa 0%,#f4f6fb 100%); border-radius:8px;">
+                  <h2 style="margin:0 0 6px; color:#0ea5a3; font-size:20px; font-weight:600;">Welcome to S&amp;H Family of KRCT</h2>
+                  <p style="margin:0; color:#3b4761; font-size:15px; font-style:italic;">Warm Greetings from Programming Club</p>
+                </div>
+                <p style="margin:0; color:#334155; font-size:14px; line-height:1.6;">Click the button below to set your password and activate your account. This link will expire soon for security.</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="px" align="left" style="padding:22px 32px 0 32px;">
+                <!-- Bulletproof button -->
+                <a href="{{ .ConfirmationURL }}" style="background:linear-gradient(90deg,#0ea5a3 0%,#1f3b7b 100%); color:#fff; text-decoration:none; font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif; font-weight:700; display:inline-block; padding:12px 22px; border-radius:10px; border:none; box-shadow:0 2px 8px rgba(14,165,163,0.12); letter-spacing:0.02em;">Set password & Join</a>
+              </td>
+            </tr>
+            <tr>
+              <td class="px" style="padding:22px 32px 0 32px;">
+                <hr style="border:none; height:1px; background:#eef1f7;" />
+              </td>
+            </tr>
+            <tr>
+              <td class="px" style="padding:16px 32px 28px 32px; font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;">
+                <p style="margin:0 0 8px; color:#5b6786; font-size:13px;">If the button doesn't work, copy and paste this URL in your browser:</p>
+                <p style="margin:0; color:#334155; font-size:12px; word-break:break-all;">{{ .ConfirmationURL }}</p>
+              </td>
+            </tr>
+          </table>
+          <div style="color:#6b7280; font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif; font-size:12px; margin-top:14px; text-align:center;">
+            <span style="display:inline-block; background:#e0f7fa; color:#0ea5a3; border-radius:6px; padding:2px 10px; font-weight:600; margin-right:6px;">Attendo</span>
+            © 2025 • If you didn’t expect this email, you can safely ignore it.
+          </div>
+        </td>
+      </tr>
+    </table>
+  <!-- Remove all script tags for Supabase compatibility -->
+  </body>
+  </html>

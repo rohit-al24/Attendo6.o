@@ -49,9 +49,12 @@ const StudentAttendance = () => {
         .select('subject, status, faculty_id, period_number')
         .eq('student_id', student.id);
       if (!data) return;
-      const total = data.length;
-      const present = data.filter((r: any) => r.status === 'present').length;
-      setAttendance(total ? Math.round((present / total) * 1000) / 10 : 0);
+  const total = data.length;
+  const present = data.filter((r: any) => r.status === 'present').length;
+  const onduty = data.filter((r: any) => r.status === 'onduty').length;
+  // Percentage should treat Present + OnDuty as present for percentage calculation only
+  const effectivePresent = present + onduty;
+  setAttendance(total ? Math.round((effectivePresent / total) * 1000) / 10 : 0);
 
       const facultyIds = Array.from(new Set(data.map((r: any) => r.faculty_id).filter(Boolean)));
       let facultyMap: Record<string, string> = {};
@@ -74,7 +77,10 @@ const StudentAttendance = () => {
         const present = records.filter((r: any) => r.status === 'present').length;
         const absent = records.filter((r: any) => r.status === 'absent').length;
         const onduty = records.filter((r: any) => r.status === 'onduty').length;
+        const leave = records.filter((r: any) => r.status === 'leave').length;
         const total = records.length;
+        // Percentage uses present + onduty as present (leave counted as absent for percentage only)
+        const effectivePresentPerRow = present + onduty;
         return {
           facultyName: facultyMap[facultyId] || 'Unknown',
           subject,
@@ -82,8 +88,9 @@ const StudentAttendance = () => {
           present,
           absent,
           onduty,
+          leave,
           total,
-          percentage: total ? ((present / total) * 100).toFixed(2) + '%' : '0%'
+          percentage: total ? ((effectivePresentPerRow / total) * 100).toFixed(2) + '%' : '0%'
         };
       });
       setSubjects(rows);
