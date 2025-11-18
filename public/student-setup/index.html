@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Account Setup</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Intro/Catalog section shown first -->
+  <section id="intro" class="hero">
+    <div class="hero-inner">
+      <img src="https://attendokrct3o.github.io/assets/attendo-logo.png" alt="Attendo Logo" class="logo" />
+      <h1>Welcome to Zynix Attendo</h1>
+      <p class="lead">Your one place to track attendance, results, announcements, and more.</p>
+
+      <div class="features">
+        <div class="feature-card">
+          <div class="f-icon">📅</div>
+          <div class="f-title">Attendance</div>
+          <div class="f-desc">Daily and subject-wise attendance with clear percentages.</div>
+        </div>
+        <div class="feature-card">
+          <div class="f-icon">📣</div>
+          <div class="f-title">Announcements</div>
+          <div class="f-desc">Stay updated with important notices and events.</div>
+        </div>
+        <div class="feature-card">
+          <div class="f-icon">📊</div>
+          <div class="f-title">Results</div>
+          <div class="f-desc">View internal, semester, and exam results in one place.</div>
+        </div>
+        <div class="feature-card">
+          <div class="f-icon">🧾</div>
+          <div class="f-title">Feedback & Voting</div>
+          <div class="f-desc">Share feedback and participate in quick polls.</div>
+        </div>
+      </div>
+
+      <button id="getStarted" class="btn hero-btn">Get Started</button>
+    </div>
+  </section>
+
+  <!-- Setup flow container hidden initially -->
+  <div id="setupContainer" class="container hidden">
+    <div class="card">
+      <img src="https://attendokrct3o.github.io/assets/attendo-logo.png" alt="Attendo Logo" class="logo" />
+      <h2>Complete Your Student Account</h2>
+      <p class="muted">Enter your college email to find your record, confirm your details, then set your password.</p>
+
+      <!-- Stepper -->
+      <div class="steps">
+        <div class="step active" data-step="1">1. Email</div>
+        <div class="step" data-step="2">2. Verify</div>
+        <div class="step" data-step="3">3. Password</div>
+      </div>
+
+      <!-- Step 1: Email Lookup -->
+      <form id="emailForm" class="step-pane" data-step="1">
+        <label class="label" for="email">College Email</label>
+        <div class="input-row">
+          <input class="input" id="email" name="email" type="email" placeholder="student@college.edu" required />
+          <button class="btn" type="submit">Find my record</button>
+        </div>
+        <div id="emailHint" class="hint"></div>
+        <div id="rollAlt" class="hidden">
+          <label class="label" for="roll">Or search by Roll Number</label>
+          <div class="input-row">
+            <input class="input" id="roll" name="roll" type="text" placeholder="e.g., 21CS001" />
+            <button id="rollBtn" class="btn" type="button">Find by roll</button>
+          </div>
+        </div>
+      </form>
+
+      <!-- Step 2: Verify Details -->
+      <div id="verifyPane" class="step-pane hidden" data-step="2">
+        <div class="details">
+          <div class="row"><span>Name</span><b id="detailName">-</b></div>
+          <div class="row"><span>Roll Number</span><b id="detailRoll">-</b></div>
+          <div class="row"><span>Email</span><b id="detailEmail">-</b></div>
+          <div class="row"><span>Department</span><b id="detailDept">-</b></div>
+          <div class="row"><span>Year / Section</span><b id="detailYearSec">-</b></div>
+        </div>
+        <label class="check">
+          <input id="confirmDetails" type="checkbox" /> These details are mine.
+        </label>
+        <button id="toPassword" class="btn" disabled>Continue</button>
+      </div>
+
+      <!-- Step 3: Set Password -->
+      <form id="passwordForm" class="step-pane hidden" data-step="3">
+        <label class="label" for="password">Set Password</label>
+        <div class="input-with-toggle">
+          <input class="input" id="password" type="password" placeholder="Create a strong password" required />
+          <button class="icon-btn" type="button" data-toggle="password" aria-label="Toggle password">👁️</button>
+        </div>
+        <label class="label" for="confirm">Confirm Password</label>
+        <div class="input-with-toggle">
+          <input class="input" id="confirm" type="password" placeholder="Re-enter password" required />
+          <button class="icon-btn" type="button" data-toggle="confirm" aria-label="Toggle confirm">👁️</button>
+        </div>
+        <div id="strength" class="hint"></div>
+        <button class="btn" type="submit">Save Password</button>
+      </form>
+
+      <div id="message" class="message"></div>
+      <div id="diag" class="diag"></div>
+    </div>
+  </div>
+
+  <script type="module" src="setup.js"></script>
+</body>
+</html>

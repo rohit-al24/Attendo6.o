@@ -47,7 +47,162 @@ const F1NameLightning = ({ name }: { name?: string }) => {
 };
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LogOut, User, Megaphone, Vote, FileBarChart, MessageSquare, IdCard } from "lucide-react";
+import { LogOut, User, Megaphone, Vote, FileBarChart, MessageSquare, IdCard, Bell, Mic, Sparkles, Music } from "lucide-react";
+
+// Kabali Voice Assistant Bar (persistent, expandable)
+const kabaliLogo = (
+  <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-black via-gray-800 to-slate-700 shadow-lg border-2 border-white">
+    <Music className="w-6 h-6 text-yellow-400" />
+  </span>
+);
+
+const KabaliBar = () => {
+  const [expanded, setExpanded] = useState(false);
+  const [listening, setListening] = useState(false);
+  const [transcript, setTranscript] = useState("");
+  const [replyLines, setReplyLines] = useState<string[]>([]);
+  const [showLines, setShowLines] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const recognitionRef = useRef<any>(null);
+
+  // Setup Web Speech API
+  useEffect(() => {
+    if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) return;
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    recognitionRef.current = new SpeechRecognition();
+    recognitionRef.current.lang = 'en-US';
+    recognitionRef.current.interimResults = false;
+    recognitionRef.current.maxAlternatives = 1;
+    recognitionRef.current.onresult = (event: any) => {
+      const text = event.results[0][0].transcript;
+      setTranscript(text);
+      setListening(false);
+      handleSend(text);
+    };
+    recognitionRef.current.onerror = () => {
+      setListening(false);
+    };
+    // eslint-disable-next-line
+  }, []);
+
+  // Stop speech synthesis if speaking
+  const stopSpeaking = () => {
+    if ('speechSynthesis' in window && window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel();
+    }
+  };
+
+  const startListening = () => {
+    stopSpeaking();
+    setTranscript("");
+    setReplyLines([]);
+    setShowLines(0);
+    setListening(true);
+    recognitionRef.current?.start();
+  };
+
+  const stopListening = () => {
+    setListening(false);
+    recognitionRef.current?.stop();
+    stopSpeaking();
+  };
+
+  async function handleSend(text: string) {
+    setLoading(true);
+    setReplyLines([]);
+    setShowLines(0);
+    try {
+      const res = await fetch("http://localhost:4001/api/assistant", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text })
+      });
+      const data = await res.json();
+      const replyText = data.reply || "(No response)";
+      // Split reply into lines (simulate lyrics)
+      const lines = replyText.split(/(?<=[.!?])\s+|\n+/g).filter(Boolean);
+      setReplyLines(lines);
+      setShowLines(0);
+      // Animate lines one by one
+      let idx = 0;
+      function showNextLine() {
+        setShowLines(i => i + 1);
+        idx++;
+        if (idx < lines.length) {
+          setTimeout(showNextLine, 1200);
+        } else {
+          // Speak the reply after all lines are shown
+          if ('speechSynthesis' in window) {
+            const utter = new window.SpeechSynthesisUtterance(replyText);
+            utter.lang = 'en-US';
+            window.speechSynthesis.speak(utter);
+          }
+        }
+      }
+      setTimeout(showNextLine, 800);
+    } catch (err) {
+      setReplyLines(["Sorry, I couldn't reach the AI server."]);
+      setShowLines(1);
+    }
+    setLoading(false);
+  }
+
+  // Collapse bar and reset state
+  const collapse = () => {
+    setExpanded(false);
+    setListening(false);
+    setTranscript("");
+    setReplyLines([]);
+    setShowLines(0);
+    setLoading(false);
+  };
+
+  return (
+    <div className="fixed bottom-24 right-5 z-50 flex items-end">
+      <div
+        className={`transition-all duration-300 flex items-center shadow-2xl ${expanded ? 'w-[380px] sm:w-[480px] h-20 bg-black/90 rounded-2xl px-4' : 'w-16 h-16 bg-black rounded-full px-0'} border-2 border-white`}
+        style={{ boxShadow: '0 4px 24px 0 rgba(0,0,64,0.10)' }}
+      >
+        <button
+          className={`flex items-center gap-2 focus:outline-none ${expanded ? 'mr-4' : ''}`}
+          onClick={() => expanded ? collapse() : setExpanded(true)}
+          aria-label={expanded ? 'Close Kabali' : 'Open Kabali'}
+        >
+          {kabaliLogo}
+          {expanded && <span className="font-semibold text-yellow-400 text-lg">Kabali</span>}
+        </button>
+        {expanded && (
+          <>
+            <div className="flex-1 flex flex-col justify-center min-w-0">
+              <div className="text-xs text-slate-300 mb-1 truncate">{listening ? 'Listening…' : transcript ? 'You: ' + transcript : 'Tap mic and speak'}</div>
+              <div className="flex flex-col items-start min-h-[32px]">
+                {replyLines.slice(0, showLines).map((line, i) => (
+                  <div key={i} className="text-yellow-200 font-semibold text-base animate-fade-in mb-1" style={{animationDelay: `${i * 0.2}s`}}>{line}</div>
+                ))}
+                {loading && <div className="text-yellow-400 italic">Thinking…</div>}
+              </div>
+            </div>
+            <button
+              className={`ml-4 p-3 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg flex items-center justify-center transition-all ${listening ? 'animate-pulse' : ''}`}
+              style={{ fontSize: 28 }}
+              onClick={() => {
+                if (listening || (typeof window !== 'undefined' && window.speechSynthesis?.speaking)) {
+                  stopListening();
+                } else {
+                  startListening();
+                }
+              }}
+              disabled={loading}
+              aria-label={listening ? 'Stop listening' : 'Start listening'}
+            >
+              <Mic className="w-8 h-8" />
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
 import { useNavigate, useLocation } from "react-router-dom";
 import React, { useEffect, useState, useRef } from "react";
 import MobileHeader from "@/components/MobileHeader";
@@ -219,9 +374,23 @@ const StudentDashboard = () => {
     fetchAnnouncement();
   }, []);
 
+  const [assistantOpen, setAssistantOpen] = useState(false);
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
-      <MobileHeader title="Student Portal" />
+      <MobileHeader 
+        title="Student Portal"
+        right={
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 px-2 py-1 text-xs rounded-md w-auto"
+            onClick={() => { try { sessionStorage.removeItem('student'); } catch {}; navigate('/login-selection'); }}
+          >
+            <LogOut className="w-3.5 h-3.5 mr-1.5" />
+            Logout
+          </Button>
+        }
+      />
       {/* ...existing code... */}
       {/* Announcement Popup */}
       {showAnnouncement && announcement && (
@@ -245,74 +414,72 @@ const StudentDashboard = () => {
           </div>
         </Dialog>
       )}
-      {/* Header */}
-      <header className="border-b bg-card shadow-soft">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 gradient-primary rounded-lg flex items-center justify-center">
-              <User className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold">Student Portal</h1>
-              <p className="text-sm text-muted-foreground">Welcome back, {student?.full_name}</p>
-            </div>
-          </div>
-          <Button 
-            variant="ghost" 
-            onClick={() => { try { sessionStorage.removeItem('student'); } catch {}; navigate("/login-selection"); }}
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            Logout
-          </Button>
-        </div>
-      </header>
+      
 
   <main className="container mx-auto px-4 py-6 space-y-4 pb-20">
-        {/* Top: Info left, profile right */}
-        <Card className="shadow-medium p-4 sm:p-6">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex-1">
-              <p className="text-sm text-muted-foreground">Hello,</p>
-              <F1NameLightning name={student?.full_name} />
-              <div className="mt-2 grid grid-cols-2 gap-2 text-sm sm:text-base">
-                <div>
-                  <p className="text-muted-foreground">Roll No</p>
-                  <p className="font-semibold">{student?.roll_number}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Department</p>
-                  <p className="font-semibold">{classInfo?.department || '-'}</p>
-                </div>
-              </div>
-            </div>
-            <ProfilePhotoSpin profileUrl={student?.profile_url} fullName={student?.full_name} />
-
+        {/* Welcome banner (blue gradient theme) */}
+        <div className="w-full rounded-xl bg-gradient-to-b from-blue-500 to-blue-400 text-white shadow-md px-4 sm:px-6 py-5 sm:py-6 flex items-start justify-between">
+          <div>
+            <h2 className="text-xl sm:text-2xl font-bold">
+              {`Welcome back${student?.full_name ? ", " + (student.full_name.split(" ")[0] || student.full_name) : ""}!`}
+            </h2>
+            <p className="mt-1 text-sm opacity-90">Here's your academic overview</p>
           </div>
-        </Card>
+          <button
+            type="button"
+            aria-label="Notifications"
+            className="mt-1 p-1.5 rounded-full hover:bg-white/15 transition-colors"
+            onClick={() => navigate('/student/announcements')}
+          >
+            <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+          </button>
+        </div>
 
         {/* 3x2 grid buttons */}
-        <div className="grid grid-cols-2 gap-3 sm:gap-4">
-          <Button className="h-24 sm:h-28 rounded-xl bg-primary text-primary-foreground hover:opacity-90 shadow-md" onClick={() => navigate('/student/attendance', { state: { student } })}>
-            Attendance
+        <div className="grid grid-cols-2 gap-4">
+          <Button
+            className="flex items-center justify-start gap-4 h-20 sm:h-24 w-full rounded-full bg-gradient-to-r from-blue-600 via-blue-500 to-blue-400 text-white shadow-lg hover:from-blue-700 hover:to-blue-500 transition-all text-lg font-semibold px-6 sm:px-8"
+            onClick={() => navigate('/student/attendance', { state: { student } })}
+          >
+            <IdCard className="w-7 h-7 opacity-90" /> Attendance
           </Button>
-          <Button className="h-24 sm:h-28 rounded-xl bg-emerald-600 text-white hover:opacity-90 shadow-md" onClick={() => navigate('/student/announcements')}>
-            Announcements
+          <Button
+            className="flex items-center justify-start gap-4 h-20 sm:h-24 w-full rounded-full bg-gradient-to-r from-emerald-500 via-emerald-400 to-emerald-300 text-white shadow-lg hover:from-emerald-600 hover:to-emerald-400 transition-all text-lg font-semibold px-6 sm:px-8"
+            onClick={() => navigate('/student/announcements')}
+          >
+            <Megaphone className="w-7 h-7 opacity-90" /> Announcements
           </Button>
-          <Button className="h-24 sm:h-28 rounded-xl bg-amber-500 text-black hover:opacity-90 shadow-md" onClick={() => navigate('/student/votings')}>
-            Class Votings
+          <Button
+            className="flex items-center justify-start gap-4 h-20 sm:h-24 w-full rounded-full bg-gradient-to-r from-amber-400 via-yellow-300 to-yellow-200 text-slate-900 shadow-lg hover:from-amber-500 hover:to-yellow-300 transition-all text-lg font-semibold px-6 sm:px-8"
+            onClick={() => navigate('/student/votings')}
+          >
+            <Vote className="w-7 h-7 opacity-90" /> Class Votings
           </Button>
-          <Button className="h-24 sm:h-28 rounded-xl bg-indigo-600 text-white hover:opacity-90 shadow-md" onClick={() => navigate('/student/results', { state: { student } })}>
-            Results
+          <Button
+            className="flex items-center justify-start gap-4 h-20 sm:h-24 w-full rounded-full bg-gradient-to-r from-indigo-500 via-indigo-400 to-indigo-300 text-white shadow-lg hover:from-indigo-600 hover:to-indigo-400 transition-all text-lg font-semibold px-6 sm:px-8"
+            onClick={() => navigate('/student/results', { state: { student } })}
+          >
+            <FileBarChart className="w-7 h-7 opacity-90" /> Results
           </Button>
-          <Button className="h-24 sm:h-28 rounded-xl bg-rose-500 text-white hover:opacity-90 shadow-md" onClick={() => navigate('/student/feedback')}>
-            Feedback
+          <Button
+            className="flex items-center justify-start gap-4 h-20 sm:h-24 w-full rounded-full bg-gradient-to-r from-rose-500 via-rose-400 to-rose-300 text-white shadow-lg hover:from-rose-600 hover:to-rose-400 transition-all text-lg font-semibold px-6 sm:px-8"
+            onClick={() => navigate('/student/feedback')}
+          >
+            <MessageSquare className="w-7 h-7 opacity-90" /> Feedback
           </Button>
-          <Button className="h-24 sm:h-28 rounded-xl bg-slate-700 text-white hover:opacity-90 shadow-md" onClick={() => navigate('/student/profile')}>
-            Profile
+          <Button
+            className="flex items-center justify-start gap-4 h-20 sm:h-24 w-full rounded-full bg-gradient-to-r from-slate-700 via-slate-600 to-slate-500 text-white shadow-lg hover:from-slate-800 hover:to-slate-600 transition-all text-lg font-semibold px-6 sm:px-8"
+            onClick={() => navigate('/student/profile')}
+          >
+            <User className="w-7 h-7 opacity-90" /> Profile
           </Button>
         </div>
       </main>
-      <StudentTabBar />
+      <div className="fixed bottom-0 left-0 w-full z-50">
+        <StudentTabBar />
+      </div>
+      {/* Kabali Voice Assistant Bar */}
+      <KabaliBar />
     </div>
   );
 };

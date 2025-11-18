@@ -1,15 +1,19 @@
 import React from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 
 type Props = {
   title?: string;
   showBack?: boolean;
   onBack?: () => void;
+  iconText?: string;
+  right?: React.ReactNode;
   style?: React.CSSProperties;
 };
 
-const MobileHeader: React.FC<Props> = ({ title, showBack = true, onBack, style }) => {
+const MobileHeader: React.FC<Props> = ({ title, showBack = true, onBack, iconText, right, style }) => {
   const location = useLocation?.();
+  const navigate = useNavigate();
   const routeTitleMap: Record<string, string> = {
     "/": "Home",
     "/login-selection": "Login",
@@ -34,7 +38,8 @@ const MobileHeader: React.FC<Props> = ({ title, showBack = true, onBack, style }
     "/faculty/AdvisorAttendanceEdit": "Edit Attendance",
     "/faculty/publish-results": "Publish Results",
   };
-  const inferredTitle = title || (location?.pathname ? (routeTitleMap[location.pathname] || "") : "");
+  const resolvedTitle = title || (location?.pathname ? routeTitleMap[location.pathname] : "") || "";
+
   const handleBack = () => {
     if (onBack) return onBack();
     // Prefer Android interface if available
@@ -42,53 +47,52 @@ const MobileHeader: React.FC<Props> = ({ title, showBack = true, onBack, style }
     if (window.AndroidInterface && typeof window.AndroidInterface.goBack === "function") {
       // @ts-ignore
       window.AndroidInterface.goBack();
-    } else {
+      return;
+    }
+    if (window.history.length > 1) {
       window.history.back();
+    } else {
+      navigate(-1);
     }
   };
 
+  const letter = (iconText || resolvedTitle || "?").trim().charAt(0).toUpperCase() || "?";
+
   return (
-    <div
-      style={{
-        height: 32,
-        background: "linear-gradient(90deg, #f8fafc 0%, #e2e8f0 100%)",
-        display: "flex",
-        alignItems: "center",
-        boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-        position: "sticky",
-        top: 0,
-        zIndex: 30,
-        paddingLeft: 8,
-        paddingRight: 8,
-        ...style,
-      }}
-    >
-      <span style={{ display: "flex", alignItems: "center" }}>
-        {showBack && (
-          <button
-            aria-label="Back"
-            onClick={handleBack}
-            style={{
-              background: "none",
-              border: "none",
-              padding: 0,
-              fontSize: 18,
-              color: "#333",
-              cursor: "pointer",
-              height: "100%",
-              display: "flex",
-              alignItems: "center",
-              marginRight: 6,
-            }}
-          >
-            &#8592;
-          </button>
+    <>
+      {/* Small status bar strip for mobile */}
+        {/* Status/notification bar spacer: gray and adaptive height */}
+        <div
+          className="sticky top-0 z-50 bg-slate-200"
+          style={{ height: "calc(env(safe-area-inset-top, 0px) + 10px)" }}
+        ></div>
+      <header className="border-b bg-card shadow-soft" style={style}>
+      <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          {showBack && (
+            <button
+              onClick={handleBack}
+              aria-label="Go back"
+              className="w-8 h-8 rounded-lg border bg-background hover:bg-muted flex items-center justify-center text-foreground"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+          )}
+          <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center">
+            <span className="text-white text-xl font-bold leading-none">{letter}</span>
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-base md:text-lg font-bold leading-tight truncate">{resolvedTitle}</h1>
+          </div>
+        </div>
+        {right && (
+          <div className="flex flex-row flex-wrap items-center justify-end md:gap-4 gap-2 text-xs md:text-sm font-semibold text-muted-foreground">
+            {right}
+          </div>
         )}
-        {(inferredTitle || title) && (
-          <span style={{ fontWeight: 500, fontSize: 15, color: "#444" }}>{inferredTitle || title}</span>
-        )}
-      </span>
-    </div>
+      </div>
+      </header>
+    </>
   );
 };
 

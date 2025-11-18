@@ -9,18 +9,34 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
+        // Keep existing variants untouched to avoid regressions
         default: "bg-primary text-primary-foreground hover:bg-primary/90",
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
+        // New, more mature/minimal options
+        soft: "bg-muted text-foreground border border-transparent hover:bg-muted/80",
+        subtle: "bg-transparent text-foreground border border-border hover:bg-accent",
+        quiet: "bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted/60",
+        tile: [
+          // Calmer tile: soft blue-gray gradient, less white, gentle shadow
+          "bg-gradient-to-br from-blue-100 via-slate-100 to-slate-200",
+          "text-slate-800 border border-slate-300",
+          "shadow-sm hover:shadow-md",
+          "hover:from-blue-200 hover:to-slate-300 hover:border-blue-300",
+          "transition-all duration-200",
+          "rounded-xl",
+          "focus-visible:ring-2 focus-visible:ring-blue-200"
+        ].join(' '),
       },
       size: {
         default: "h-10 px-4 py-2",
         sm: "h-9 rounded-md px-3",
         lg: "h-11 rounded-md px-8",
         icon: "h-10 w-10",
+        tile: "h-24 sm:h-28 rounded-lg px-4",
       },
     },
     defaultVariants: {

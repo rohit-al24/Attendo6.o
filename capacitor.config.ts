@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.attendo.app',
+  appId: 'com.exampleattendo.com',
   appName: 'Attendo',
   webDir: 'dist'
 };

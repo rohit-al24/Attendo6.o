@@ -1,6 +1,5 @@
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { LogOut, User, Book } from "lucide-react";
+import { User, Book } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import MobileHeader from "@/components/MobileHeader";
 import StudentTabBar from "@/components/StudentTabBar";
@@ -101,26 +100,7 @@ const StudentAttendance = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
       <MobileHeader title="Attendance" />
-      <header className="border-b bg-card shadow-soft">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 gradient-primary rounded-lg flex items-center justify-center">
-              <User className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold">Attendance</h1>
-              <p className="text-sm text-muted-foreground">{student?.full_name}</p>
-            </div>
-          </div>
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate("/login-selection")}
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            Logout
-          </Button>
-        </div>
-      </header>
+      
 
   <main className="container mx-auto px-4 py-8 space-y-6 pb-20">
         {/* Student Info Card */}
@@ -213,7 +193,9 @@ const StudentAttendance = () => {
           </div>
         </Card>
       </main>
-      <StudentTabBar />
+      <div className="fixed bottom-0 left-0 w-full z-50">
+        <StudentTabBar />
+      </div>
     </div>
   );
 };

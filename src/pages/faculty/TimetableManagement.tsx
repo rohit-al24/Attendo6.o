@@ -77,7 +77,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Save, Edit } from "lucide-react";
+import { Save, Edit } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Select,
@@ -256,11 +256,7 @@ const TimetableManagement = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
       <MobileHeader title="Timetable" />
-      <header className="border-b bg-card shadow-soft">
-        <div className="container mx-auto px-4 py-4">
-          <Button variant="ghost" onClick={() => navigate("/faculty-dashboard")}> <ArrowLeft className="w-4 h-4 mr-2" /> Back to Dashboard </Button>
-        </div>
-      </header>
+      
       <main className="container mx-auto px-4 py-8 space-y-6">
         {/* Subject-to-Faculty Assignment Section: Only show in edit mode */}
         {isEditing && (

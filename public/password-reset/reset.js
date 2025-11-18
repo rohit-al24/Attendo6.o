@@ -1,6 +1,10 @@
-// This script supports both access_token in hash and confirmation param in query string
+// Supabase project configuration
+const SUPABASE_URL = "https://gczoakupibhzaeplstzh.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdjem9ha3VwaWJoemFlcGxzdHpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAzMzg2MjksImV4cCI6MjA3NTkxNDYyOX0.h7QgriGMdnahI-g5mz7xCOkjCSGCN9QV5HR7bKtEXCA";
+
 const form = document.getElementById('resetForm');
 const message = document.getElementById('message');
+const tokenMessage = document.getElementById('tokenMessage');
 
 function getToken() {
   // 1. Try access_token in hash
@@ -15,10 +19,26 @@ function getToken() {
     // Try to extract token=... from the decoded URL
     const match = decoded.match(/token=([^&]+)/);
     if (match) return match[1];
+    // If confirmation param itself is a token, use it directly
+    if (/^[A-Za-z0-9-_\.]+$/.test(confirmationUrl)) return confirmationUrl;
   }
-  // Demo: inject mock token if none found
-  return 'MOCK_DEMO_TOKEN_1234567890';
+  // No valid token found
+  return null;
 }
+
+function showTokenStatus() {
+  const token = getToken();
+  if (!token) {
+    tokenMessage.textContent = 'No valid password reset token found in the URL. Please use the link sent to your email.';
+    tokenMessage.style.color = '#ef4444';
+    form.querySelector('button[type="submit"]').disabled = true;
+  } else {
+    tokenMessage.textContent = '';
+    form.querySelector('button[type="submit"]').disabled = false;
+  }
+}
+
+showTokenStatus();
 
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -35,7 +55,6 @@ form.addEventListener('submit', async (e) => {
   }
   // Get token from hash or query param
   const token = getToken();
-  console.log('Extracted token:', token);
   if (!token) {
     message.textContent = 'Invalid or missing token.';
     return;

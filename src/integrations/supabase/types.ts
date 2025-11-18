@@ -346,6 +346,123 @@ export type Database = {
         }
         Relationships: []
       }
+      polls: {
+        Row: {
+          id: string
+          title: string
+          class_id: string
+          created_by_faculty_id: string | null
+          is_open: boolean
+          published: boolean
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          title: string
+          class_id: string
+          created_by_faculty_id?: string | null
+          is_open?: boolean
+          published?: boolean
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          title?: string
+          class_id?: string
+          created_by_faculty_id?: string | null
+          is_open?: boolean
+          published?: boolean
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "polls_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "polls_created_by_faculty_id_fkey"
+            columns: ["created_by_faculty_id"]
+            isOneToOne: false
+            referencedRelation: "faculty"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      poll_options: {
+        Row: {
+          id: string
+          poll_id: string
+          label: string
+        }
+        Insert: {
+          id?: string
+          poll_id: string
+          label: string
+        }
+        Update: {
+          id?: string
+          poll_id?: string
+          label?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "poll_options_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "polls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      poll_votes: {
+        Row: {
+          id: string
+          poll_id: string
+          option_id: string
+          student_id: string
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          poll_id: string
+          option_id: string
+          student_id: string
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          poll_id?: string
+          option_id?: string
+          student_id?: string
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "poll_votes_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "polls"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "poll_votes_option_id_fkey"
+            columns: ["option_id"]
+            isOneToOne: false
+            referencedRelation: "poll_options"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "poll_votes_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

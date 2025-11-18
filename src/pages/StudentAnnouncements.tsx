@@ -27,7 +27,6 @@ const StudentAnnouncements = () => {
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
       <MobileHeader title="Announcements" />
   <main className="container mx-auto px-4 py-8 space-y-6 pb-20">
-        <h1 className="text-2xl font-bold mb-6">Announcements</h1>
         {loading ? (
           <div>Loading...</div>
         ) : (
@@ -52,7 +51,9 @@ const StudentAnnouncements = () => {
           </ul>
         )}
       </main>
-      <StudentTabBar />
+      <div className="fixed bottom-0 left-0 w-full z-50">
+        <StudentTabBar />
+      </div>
     </div>
   );
 };

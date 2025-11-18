@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LogOut, Calendar, ClipboardList, BookOpen } from "lucide-react";
+import { Calendar, ClipboardList, BookOpen } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -124,27 +124,7 @@ const FacultyDashboard = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
       <MobileHeader title="Faculty Portal" />
-      {/* Header */}
-      <header className="border-b bg-card shadow-soft">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 gradient-secondary rounded-lg flex items-center justify-center">
-              <BookOpen className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold">Faculty Portal</h1>
-              <p className="text-sm text-muted-foreground">Welcome, {facultyData?.name || "Faculty"}</p>
-            </div>
-          </div>
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate("/login-selection")}
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            Logout
-          </Button>
-        </div>
-      </header>
+      
 
       <main className="container mx-auto px-4 py-8 space-y-6">
         <Tabs defaultValue="teaching" className="space-y-4">
@@ -266,6 +246,15 @@ const FacultyDashboard = () => {
                   >
                     <ClipboardList className="w-6 h-6" />
                     <span>Publish Results</span>
+                  </Button>
+                  <Button 
+                    size="lg" 
+                    className="h-24 flex flex-col gap-2" 
+                    variant="outline"
+                    onClick={() => navigate('/faculty/votings')}
+                  >
+                    <BookOpen className="w-6 h-6" />
+                    <span>Class Votings</span>
                   </Button>
                   <Button 
                     size="lg" 

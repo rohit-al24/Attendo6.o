@@ -3,19 +3,19 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Attendo • Create Faculty Account - Zynix</title>
+  <title>Attendo • Create Faculty Account</title>
   <link rel="stylesheet" href="./style.css" />
   <meta name="robots" content="noindex" />
 </head>
-<body>
-  <main class="wrap">
-    <section class="card">
-      <header class="brand">Attendo</header>
-  <h1>Finishing your account</h1>
-  <p class="muted hidden" id="status">Checking your invitation…</p>
+<body style="margin:0; background:linear-gradient(135deg,#87ceeb 0%,#b3e6ff 60%,#87ceeb 100%); color:#111; font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;">
+  <main class="wrap" style="min-height:100vh;display:grid;place-items:center;padding:24px;animation:fadeBg 2.5s cubic-bezier(.5,1.7,.5,1);">
+    <section class="card" style="width:100%;max-width:520px;background:rgba(255,255,255,0.92);border:1px solid #87ceeb;border-radius:18px;box-shadow:0 18px 40px rgba(135,206,235,.18);padding:32px;animation:cardPop 1.2s cubic-bezier(.5,1.7,.5,1);color:#111;">
+      <header class="brand" style="font-weight:700;letter-spacing:-.02em;color:#111;font-size:1.6em;animation:shimmer 2.5s linear infinite;background:linear-gradient(90deg,#87ceeb,#2196f3,#87ceeb);background-size:200% 100%;background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Attendo</header>
+<h1 style="animation:fadeInUp 1.2s cubic-bezier(.5,1.7,.5,1);color:#111;">Finishing your account</h1>
+<p class="muted hidden" id="status" style="animation:fadeInUp 2.2s cubic-bezier(.5,1.7,.5,1);animation-delay:.5s;color:#111;">Checking your invitation…</p>
       <details style="margin:8px 0">
         <summary>Diagnostics</summary>
-        <pre id="diag" style="white-space:pre-wrap; background:#0b1220; color:#9bb4ff; padding:8px; border-radius:8px; max-height:220px; overflow:auto">Loading…</pre>
+        <pre id="diag" style="white-space:pre-wrap; background:#acc1ec; color:#9bb4ff; padding:8px; border-radius:8px; max-height:220px; overflow:auto">Loading…</pre>
       </details>
       <div id="error-panel" class="hidden">
         <p class="muted" id="error-text">The link seems invalid or expired.</p>
@@ -25,21 +25,21 @@
         <button id="send-recovery" class="btn">Send new link</button>
       </div>
       <div id="password-panel">
-        <label class="label">Set a new password</label>
+        <label class="label" style="color:#111;">Set a new password</label>
         <input id="password" class="input" type="password" placeholder="Enter a strong password" />
-        <button id="set-password" class="btn">Save password</button>
+        <button id="set-password" class="btn" style="background:linear-gradient(90deg,#87ceeb 0%,#2196f3 100%);color:#fff;font-weight:700;box-shadow:0 4px 18px rgba(135,206,235,0.18);animation:adPop 1.1s cubic-bezier(.5,1.7,.5,1);border:1px solid #2196f3;">Save password</button>
       </div>
       <div id="profile-panel">
-        <label class="label">Full name</label>
+        <label class="label" style="color:#111;">Full name</label>
         <input id="full-name" class="input" type="text" placeholder="Your full name" />
-        <label class="label">Department</label>
+        <label class="label" style="color:#111;">Department</label>
         <input id="department" class="input" type="text" placeholder="e.g., Computer Science" />
-        <button id="create-account" class="btn">Create account</button>
+        <button id="create-account" class="btn" style="background:linear-gradient(90deg,#2196f3 0%,#87ceeb 100%);color:#fff;font-weight:700;box-shadow:0 4px 18px rgba(135,206,235,0.13);animation:adPop 1.3s cubic-bezier(.5,1.7,.5,1);border:1px solid #2196f3;">Create account</button>
       </div>
       <div id="continue-panel" class="hidden">
-        <a id="go-dashboard" class="btn primary" href="#">Continue to dashboard</a>
+        <a id="go-dashboard" class="btn primary" href="#" style="background:linear-gradient(90deg,#87ceeb 0%,#2196f3 100%);color:#fff;font-weight:700;box-shadow:0 4px 18px rgba(135,206,235,0.18);animation:adPop 1.5s cubic-bezier(.5,1.7,.5,1);border:1px solid #2196f3;">Continue to dashboard</a>
       </div>
-      <p class="hint">If this page doesn’t load, open the link from your invite email again.</p>
+      <p class="hint" style="color:#111;">If this page doesn’t load, open the link from your invite email again.</p>
     </section>
   </main>
 
@@ -48,8 +48,12 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.3/dist/umd/supabase.js" crossorigin="anonymous"></script>
 
   <script>
-    const SUPABASE_URL = "https://gczoakupibhzaeplstzh.supabase.co";
+    // IMPORTANT: Fill these with your project's values;
+    // It's safe to expose the anon key on public pages.
+   const SUPABASE_URL = "https://gczoakupibhzaeplstzh.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdjem9ha3VwaWJoemFlcGxzdHpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAzMzg2MjksImV4cCI6MjA3NTkxNDYyOX0.h7QgriGMdnahI-g5mz7xCOkjCSGCN9QV5HR7bKtEXCA";
+
+    // Fallback: if not replaced by a bundler, prompt once (dev only)
     const effectiveAnon = SUPABASE_ANON_KEY.includes('VITE_SUPABASE_ANON_KEY') ? '' : SUPABASE_ANON_KEY;
     const client = window.supabase.createClient(SUPABASE_URL, effectiveAnon || undefined);
 
@@ -65,7 +69,9 @@
       } catch { return null; }
     }
 
-    const statusEl = document.getElementById('status');
+  const statusEl = document.getElementById('status');
+  // Always show status
+  statusEl.classList.remove('hidden');
     const passwordPanel = document.getElementById('password-panel');
   const continuePanel = document.getElementById('continue-panel');
   const profilePanel = document.getElementById('profile-panel');
@@ -80,10 +86,9 @@
     const recoveryEmail = document.getElementById('recovery-email');
     const sendRecovery = document.getElementById('send-recovery');
 
-  const DASHBOARD_URL = 'https://attendo6.netlify.app/';
+  const DASHBOARD_URL = 'https://attendo6.netlify.app/'; // adjust if your dashboard lives elsewhere
   let sessionReady = false;
   const diagEl = document.getElementById('diag');
-  statusEl.classList.remove('hidden');
 
   function updateDiag(extra) {
     (async () => {
@@ -112,32 +117,35 @@
 
     async function finalizeSession() {
       try {
+        // If Supabase returned an error via hash, show recovery UI
         const err = hash.get('error');
+        const codeName = hash.get('error_code');
         const desc = hash.get('error_description');
         if (err) {
           errorPanel.classList.remove('hidden');
           errorText.textContent = (desc || err).replaceAll('+',' ');
+          // We still continue to check for tokens in case the link carried them
         }
+        // New (code) flow
         const code = qs.get('code');
         if (code) {
           const { error } = await client.auth.exchangeCodeForSession(code);
           if (error) throw error;
           sessionReady = true; return true;
         }
+        // Hash token flow
         const access_token = hash.get('access_token');
         const refresh_token = hash.get('refresh_token');
         if (access_token && refresh_token) {
-          // Show token issuer/audience for mismatch debugging
           const payload = parseJwt(access_token);
           const iss = payload?.iss || payload?.iss_url || null;
           const aud = payload?.aud || null;
-          if (iss) {
-            updateDiag({ note: `Token iss: ${iss}, aud: ${aud || 'n/a'}` });
-          }
+          if (iss) { updateDiag({ note: `Token iss: ${iss}, aud: ${aud || 'n/a'}` }); }
           const { error } = await client.auth.setSession({ access_token, refresh_token });
           if (error) { updateDiag({ error }); throw error; }
           sessionReady = true; return true;
         }
+        // Check existing session
         const { data } = await client.auth.getSession();
         sessionReady = !!data.session; return sessionReady;
       } catch (e) {
@@ -149,8 +157,12 @@
     }
 
     async function maybeShowPasswordForm() {
+      // If this is the direct invite flow, the session is valid but password may not be set.
+      // Supabase allows updating password when logged in.
       const { data } = await client.auth.getUser();
       if (data?.user) {
+        // Show a password field if the user was invited (heuristic: no password set yet is not exposed).
+        // We provide the option to set/replace password anyway.
         passwordPanel.classList.remove('hidden');
         profilePanel.classList.remove('hidden');
       }
@@ -189,6 +201,7 @@
         alert([error.message, error.details, error.hint, error.code].filter(Boolean).join('\n'));
         return;
       }
+      // Verify row exists (best-effort; may be blocked by RLS policies)
       try {
         const { data: check } = await client.from('faculty').select('user_id').eq('user_id', userData.user.id).maybeSingle();
         if (check?.user_id) {
@@ -204,7 +217,7 @@
       const email = (recoveryEmail.value || '').trim();
       if (!email) { alert('Enter your email'); return; }
       statusEl.textContent = 'Sending a new link…';
-      const redirectTo = window.location.origin + window.location.pathname;
+      const redirectTo = window.location.origin + window.location.pathname; // come back here
       const { error } = await client.auth.resetPasswordForEmail(email, { redirectTo });
       if (error) { alert(error.message); statusEl.textContent = 'Could not send the link'; return; }
       statusEl.textContent = 'A new link has been sent if the email exists.';
@@ -229,6 +242,7 @@
       }
     })();
 
+    // Global error traps to surface issues when nothing seems to happen
     window.addEventListener('error', (e) => {
       const msg = e?.error?.message || e?.message || String(e);
       statusEl.textContent = 'Error: ' + msg;
@@ -240,5 +254,20 @@
       updateDiag({ error: msg });
     });
   </script>
+  <style>
+@keyframes fadeBg {0%{filter:brightness(.7)}100%{filter:brightness(1)}}
+@keyframes cardPop {0%{opacity:0;transform:scale(.7)}60%{opacity:1;transform:scale(1.08)}100%{opacity:1;transform:scale(1)}}
+@keyframes shimmer {0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes fadeInUp {0%{opacity:0;transform:translateY(18px)}100%{opacity:1;transform:translateY(0)}}
+@keyframes adPop {0%{opacity:0;transform:scale(.7)}60%{opacity:1;transform:scale(1.08)}100%{opacity:1;transform:scale(1)}}
+::placeholder {
+  color: #fff !important;
+  opacity: 1;
+}
+input::placeholder {
+  color: #fff !important;
+  opacity: 1;
+}
+</style>
 </body>
 </html>

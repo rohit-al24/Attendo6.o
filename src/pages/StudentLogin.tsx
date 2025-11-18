@@ -40,6 +40,7 @@ const StudentLogin = () => {
     }
     // Successful login: persist session and route to dashboard
     try {
+      sessionStorage.setItem('studentId', data.id);
       sessionStorage.setItem('student', JSON.stringify(data));
     } catch {}
     navigate('/student-dashboard', { state: { student: data } });

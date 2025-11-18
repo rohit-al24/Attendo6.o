@@ -21,10 +21,42 @@
       padding: 2.5rem 2rem;
       text-align: center;
     }
-    .logo {
-      width: 64px;
-      margin-bottom: 1rem;
+    .logo-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 2rem;
+      margin-bottom: 1.5rem;
     }
+    .logo-anim {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 90px;
+      height: 90px;
+      border: 6px solid #4f8cff;
+      border-radius: 18px;
+      box-shadow: 0 4px 24px #6366f133;
+      position: relative;
+      animation: float 2.5s ease-in-out infinite;
+      transition: transform 0.2s;
+      background: none;
+      padding: 0;
+    }
+    .logo-anim img {
+      width: 80px;
+      height: 80px;
+      object-fit: contain;
+      border-radius: 12px;
+      display: block;
+      background: none;
+      margin: 0;
+    }
+    .logo-app { border: 6px solid #4f8cff; animation-delay: 0s; }
+    .logo-attendo { border: 6px solid #ff7e5f; animation-delay: 0.3s; }
+    .logo-club { border: 6px solid #17c3b2; animation-delay: 0.6s; }
+    .logo-anim:hover { transform: scale(1.09) rotate(-3deg); box-shadow: 0 8px 32px #6366f199; }
+    @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-16px); } }
     .brand {
       font-size: 1.5rem;
       font-weight: 700;
@@ -32,16 +64,8 @@
       margin-bottom: 0.5rem;
       letter-spacing: 1px;
     }
-    h2 {
-      color: #1e293b;
-      font-size: 1.3rem;
-      margin-bottom: 1.2rem;
-    }
-    p {
-      color: #475569;
-      font-size: 1rem;
-      margin-bottom: 1.2rem;
-    }
+    h2 { color: #1e293b; font-size: 1.3rem; margin-bottom: 1.2rem; }
+    p { color: #475569; font-size: 1rem; margin-bottom: 1.2rem; }
     a.confirm {
       display: inline-block;
       background: linear-gradient(90deg, #6366f1 0%, #3b82f6 100%);
@@ -55,9 +79,7 @@
       box-shadow: 0 2px 8px rgba(99,102,241,0.08);
       transition: background 0.2s;
     }
-    a.confirm:hover {
-      background: linear-gradient(90deg, #4f46e5 0%, #2563eb 100%);
-    }
+    a.confirm:hover { background: linear-gradient(90deg, #4f46e5 0%, #2563eb 100%); }
     .footer {
       margin-top: 2rem;
       color: #64748b;
@@ -78,66 +100,12 @@
         <img src="https://github.com/attendokrct3o/passwordreset/blob/main/new%20pc.png?raw=true" alt="Programming Club Logo" />
       </span>
     </div>
-    <style>
-      .container span:hover { transform: scale(1.08) rotate(-2deg); box-shadow: 0 8px 32px #6366f199; }
-      .logo-row {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 2rem;
-        margin-bottom: 1.5rem;
-      }
-      .logo-anim {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 90px;
-        height: 90px;
-        border: 5px solid #4f8cff;
-        border-radius: 18px;
-        box-shadow: 0 4px 24px #6366f133;
-        position: relative;
-        animation: float 2.5s ease-in-out infinite;
-        transition: transform 0.2s;
-        background: none;
-        padding: 0;
-      }
-      .logo-anim img {
-        width: 80px;
-        height: 80px;
-        object-fit: contain;
-        border-radius: 12px;
-        display: block;
-        background: none;
-        margin: 0;
-      }
-      .logo-app {
-        border: 6px solid #4f8cff;
-        animation-delay: 0s;
-      }
-      .logo-attendo {
-        border: 6px solid #ff7e5f;
-        animation-delay: 0.3s;
-      }
-      .logo-club {
-        border: 6px solid #17c3b2;
-        animation-delay: 0.6s;
-      }
-      .logo-anim:hover {
-        transform: scale(1.09) rotate(-3deg);
-        box-shadow: 0 8px 32px #6366f199;
-      }
-      @keyframes float {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-16px); }
-      }
-    </style>
-  <div class="brand">Zynix Attendo</div>
-  <h2>Reset Your Password</h2>
-  <p>We received a request to reset your password for your Zynix Attendo account.<br>
-  Click the button below to securely set a new password.</p>
-  <a href="https://attendokrct3o.github.io/passwordreset/?confirmation={{ .ConfirmationURL }}" class="confirm">Reset Password</a>
-  <div class="footer">If you did not request a password reset, you can safely ignore this email.<br>© 2025 Zynix Technologies</div>
+    <div class="brand">Zynix Attendo</div>
+    <h2>Reset Your Password</h2>
+    <p>We received a request to reset your password for your Zynix Attendo account.<br>
+    Click the button below to securely set a new password.</p>
+    <a href="https://attendokrct3o.github.io/passwordreset/?confirmation={{ .ConfirmationURL }}" class="confirm">Reset Password</a>
+    <div class="footer">If you did not request a password reset, you can safely ignore this email.<br>© 2025 Zynix Technologies</div>
   </div>
 </body>
 </html>

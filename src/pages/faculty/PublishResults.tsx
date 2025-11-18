@@ -158,12 +158,7 @@ const PublishResults = () => {
 		return (
 			<div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
 				<MobileHeader title="Publish Results" />
-			<header className="border-b bg-card shadow-soft">
-				<div className="container mx-auto px-4 py-4 flex items-center justify-between">
-					<div className="font-bold">Publish Results</div>
-					<Button variant="ghost" onClick={() => navigate('/faculty-dashboard')}>Back</Button>
-				</div>
-			</header>
+			
 			<main className="container mx-auto px-4 py-6 space-y-6">
 							<Card className="p-6 shadow-medium space-y-4">
 								{/* Exams list as clickable buttons/cards */}

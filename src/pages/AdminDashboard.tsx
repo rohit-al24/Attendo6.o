@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LogOut, Users, GraduationCap, FileText, Settings, ClipboardList, Megaphone } from "lucide-react";
+import { Users, GraduationCap, FileText, Settings, ClipboardList, Megaphone } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import MobileHeader from "@/components/MobileHeader";
 import { useEffect, useState } from "react";
@@ -91,44 +91,7 @@ const AdminDashboard = () => {
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
       {/* Minimal status bar/header for Android and browser */}
       <MobileHeader title="Admin Portal" />
-      {/* Header */}
-      <header className="border-b bg-card shadow-soft">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {/* Inline back button inside main header too, for better visibility */}
-            <button
-              aria-label="Back"
-              onClick={() => {
-                // @ts-ignore
-                if (window.AndroidInterface && typeof window.AndroidInterface.goBack === 'function') {
-                  // @ts-ignore
-                  window.AndroidInterface.goBack();
-                } else {
-                  window.history.back();
-                }
-              }}
-              className="text-foreground/70 hover:text-foreground transition-colors"
-              style={{ background: 'none', border: 'none', fontSize: 18, lineHeight: 1, padding: 0, marginRight: 6 }}
-            >
-              &#8592;
-            </button>
-            <div className="w-10 h-10 gradient-accent rounded-lg flex items-center justify-center">
-              <Settings className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold">Admin Portal</h1>
-              <p className="text-sm text-muted-foreground">System Administration</p>
-            </div>
-          </div>
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate("/login-selection")}
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            Logout
-          </Button>
-        </div>
-      </header>
+      
 
       <main className="container mx-auto px-4 py-8 space-y-6">
         {/* Stats Cards */}

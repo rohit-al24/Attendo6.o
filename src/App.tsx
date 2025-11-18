@@ -30,8 +30,8 @@ import TimetableManagement from "./pages/faculty/TimetableManagement";
 import AdvisorAttendanceReport from "./pages/faculty/AdvisorAttendanceReport";
 import AdvisorAttendanceEdit from "./pages/faculty/AdvisorAttendanceEdit";
 import PublishResults from "./pages/faculty/PublishResults";
+import ClassVotings from "./pages/faculty/ClassVotings";
 import NotFound from "./pages/NotFound";
-import MobileBack from "./components/MobileBack";
 
 
 // Wrapper to extract classId from query params and pass to AdvisorAttendanceReport
@@ -50,8 +50,6 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        {/* Global mobile back button visible on all pages (mobile only) */}
-        <MobileBack />
         <Routes>
           <Route path="/" element={<Splash />} />
           <Route path="/login-selection" element={<LoginSelection />} />
@@ -77,6 +75,7 @@ const App = () => (
           <Route path="/faculty/advisor-attendance-report" element={<AdvisorAttendanceReportWrapper />} />
           <Route path="/faculty/AdvisorAttendanceEdit" element={<AdvisorAttendanceEdit />} />
           <Route path="/faculty/publish-results" element={<PublishResults />} />
+          <Route path="/faculty/votings" element={<ClassVotings />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

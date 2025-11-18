@@ -17,12 +17,14 @@ const StudentTabBar: React.FC = () => {
     <nav
       aria-label="Student navigation"
       style={{
-        position: "sticky",
-        bottom: 0,
-        zIndex: 30,
+        width: '100%',
+        zIndex: 60,
         background: "#ffffffcc",
         backdropFilter: "saturate(180%) blur(6px)",
         borderTop: "1px solid rgba(0,0,0,0.06)",
+        // Prevent overlap with system nav bars (Android/iOS)
+        paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)",
+        paddingTop: 6,
       }}
       className="safe-top"
     >

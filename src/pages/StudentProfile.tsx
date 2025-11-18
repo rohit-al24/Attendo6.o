@@ -75,43 +75,55 @@ const StudentProfile: React.FC = () => {
           <h2 className="text-2xl font-bold mb-2">Student Profile</h2>
           {student ? (
             <div className="space-y-4">
-              <div className="flex flex-col items-center gap-2">
-                <div className="w-24 h-24 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden border">
-                  {previewUrl ? (
-                    <img src={previewUrl} alt="Profile" className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-4xl text-muted-foreground">👤</span>
-                  )}
+              <div className="flex justify-between items-center mb-2">
+                <div className="flex-1">
+                  <label className="block text-muted-foreground text-sm mb-1">Full Name</label>
+                  <Input value={student.full_name} readOnly className="h-9 text-base" />
                 </div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  ref={fileInputRef}
-                  style={{ display: 'none' }}
-                  onChange={handleFileChange}
-                  disabled={uploading}
-                />
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploading}
-                >
-                  {uploading ? 'Uploading...' : 'Upload/Change Photo'}
+                <div className="flex-1 ml-4">
+                  <label className="block text-muted-foreground text-sm mb-1">Roll Number</label>
+                  <Input value={student.roll_number} readOnly className="h-9 text-base" />
+                </div>
+                <Button type="button" size="sm" className="ml-4 h-9 px-4 py-1 text-sm font-semibold" onClick={() => navigate('/student-dashboard')}>
+                  Go to Dashboard
                 </Button>
               </div>
-              <div>
-                <label className="block text-muted-foreground text-sm mb-1">Full Name</label>
-                <Input value={student.full_name} readOnly />
-              </div>
-              <div>
-                <label className="block text-muted-foreground text-sm mb-1">Roll Number</label>
-                <Input value={student.roll_number} readOnly />
-              </div>
-              <div className="flex justify-end pt-2">
-                <Button type="button" onClick={() => navigate('/student-dashboard')}>
-                  Save &amp; Go to Dashboard
-                </Button>
+              {/* App Creators Section */}
+              <div className="mt-8">
+                <h3 className="text-lg font-bold mb-3 text-center">App Creators</h3>
+                {/* Faculty/Staff Section */}
+                <div className="grid grid-cols-3 gap-4 mb-4 max-w-2xl mx-auto">
+                  {/* Staff Cards - highlighted, smaller */}
+                  <div className="flex flex-col items-center bg-violet-50 rounded-xl shadow px-2 py-3 border border-violet-100 min-w-0">
+                    <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Dr. Dinesh Sir" className="w-12 h-12 rounded-full object-cover border-2 border-white shadow mb-1" />
+                    <span className="font-semibold text-xs truncate">Dr. Dinesh Sir</span>
+                    <span className="bg-purple-100 text-purple-700 text-[10px] px-1.5 py-0.5 rounded font-medium mt-1">Lead</span>
+                    <span className="text-[10px] text-muted-foreground mt-1">NBA HEAD</span>
+                  </div>
+                  <div className="flex flex-col items-center bg-violet-50 rounded-xl shadow px-2 py-3 border border-violet-100 min-w-0">
+                    <img src="https://randomuser.me/api/portraits/men/33.jpg" alt="Dr. Rajaguru Sir" className="w-12 h-12 rounded-full object-cover border-2 border-white shadow mb-1" />
+                    <span className="font-semibold text-xs truncate">Dr. Rajaguru Sir</span>
+                    <span className="bg-green-100 text-green-700 text-[10px] px-1.5 py-0.5 rounded font-medium mt-1">Mentor</span>
+                    <span className="text-[10px] text-muted-foreground mt-1">IQAC HEAD</span>
+                  </div>
+                  <div className="flex flex-col items-center bg-violet-50 rounded-xl shadow px-2 py-3 border border-violet-100 min-w-0">
+                    <img src="https://randomuser.me/api/portraits/men/34.jpg" alt="Mrs. Mahalakshmi Mam" className="w-12 h-12 rounded-full object-cover border-2 border-white shadow mb-1" />
+                    <span className="font-semibold text-xs truncate">Mrs. Mahalakshmi Mam</span>
+                    <span className="bg-blue-100 text-blue-700 text-[10px] px-1.5 py-0.5 rounded font-medium mt-1">Coordinator</span>
+                    <span className="text-[10px] text-muted-foreground mt-1">HOD Maths</span>
+                  </div>
+                </div>
+                {/* Student/Contributor Section */}
+                <div className="grid grid-cols-3 gap-4 max-w-2xl mx-auto">
+                  {[1,2,3,4,5,6].map((n) => (
+                    <div key={n} className="flex flex-col items-center bg-white rounded-xl shadow px-2 py-3 border border-slate-100 min-w-0">
+                      <img src={`https://randomuser.me/api/portraits/men/${40+n}.jpg`} alt={`Student ${n}`} className="w-10 h-10 rounded-full object-cover border-2 border-white shadow mb-1" />
+                      <span className="font-semibold text-xs truncate">Student {n}</span>
+                      <span className="bg-yellow-100 text-yellow-700 text-[10px] px-1.5 py-0.5 rounded font-medium mt-1">Contributor</span>
+                      <span className="text-[10px] text-muted-foreground mt-1">Dept. CSE</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           ) : (
